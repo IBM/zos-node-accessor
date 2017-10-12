@@ -1,0 +1,38 @@
+{
+  "name": "zos-node-accessor",
+  "version": "0.1.0",
+  "description": "Accessing z/OS dataset and interacting with JES in NodeJS way",
+  "main": "./lib/zosAccessor",
+  "scripts": {
+    "test": "mocha test/zosAccessor.tests.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IBM/zos-node-accessor"
+  },
+  "keywords": [
+    "zos",
+    "jes",
+    "dataset",
+    "jcl"
+  ],
+  "dependencies": {
+    "debug": "^2.6.8",
+    "ftp": "~0.3.8",
+    "q": "~1.4.1",
+    "winston": "^2.3.1"
+  },
+  "devDependencies": {
+    "chai": "~3.5.0",
+    "mocha": "~3.2.0",
+    "sinon": "~1.17.2"
+  },
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "author": "Chang Xin Miao <miaocx@cn.ibm.com>",
+  "contributors": [
+    "Qi Liang <liangqi@cn.ibm.com>"
+  ],
+  "license": "EPL-1.0"
+}
