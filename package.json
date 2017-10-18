@@ -17,10 +17,9 @@
     "jcl"
   ],
   "dependencies": {
-    "debug": "^2.6.8",
+    "debug": "~2.6.8",
     "ftp": "~0.3.8",
-    "q": "~1.4.1",
-    "winston": "^2.3.1"
+    "q": "~1.4.1" 
   },
   "devDependencies": {
     "chai": "~3.5.0",
