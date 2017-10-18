@@ -30,7 +30,7 @@ This accessor leverages z/OS FTP server to interact with z/OS, it requires `JESI
 * [Connection](#connection)
 * [MVS dataset or USS files](#mvs-dataset-or-uss-files)
   * [List](#list)
-  * [Upload] (#upload-mvs-dataset-or-uss-file)
+  * [Upload](#upload-mvs-dataset-or-uss-file)
   * [Read](#read-mvs-dataset-or-uss-file)
   * [Delete](#delete)
 * [JES jobs](#jes-jobs)
