@@ -186,6 +186,17 @@ describe('Test cases for z/OS node accessor', function() {
 
     });
 
+    it('can rename dataset', function() {
+        if(!TEST_ZOS) {
+            var stub = sinon.stub(client.client, 'rename').callsArgWith(2, null);
+        }
+        return client.rename(uploadDSN, uploadDSN + 'rename').then(function() {
+            return client.rename(uploadDSN + 'rename', uploadDSN);
+        }).finally(function () {
+            stub && stub.restore();
+        });
+    });
+
     it('can delete dataset', function() {
         if(!TEST_ZOS) {
             var stub = sinon.stub(client.client, 'delete').callsArgWith(1, null);
