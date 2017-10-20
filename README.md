@@ -33,12 +33,12 @@ This accessor leverages z/OS FTP server to interact with z/OS, it requires `JESI
   * [Upload](#upload-mvs-dataset-or-uss-file)
   * [Read](#read-mvs-dataset-or-uss-file)
   * [Delete](#delete)
+  * [Rename](#rename)
 * [JES jobs](#jes-jobs)
   * [List jobs](#list-jobs)
   * [Submit JCL](#submit-jcl)
       * [Allocate dataset](#allocate-dataset)
       * [Copy dataset](#copy-dataset)
-      * [Rename dataset](#rename-dataset)
       * [Initiate HRECALL](#initiate-hrecall)
   * [Query job status](#query-job-status)
   * [Get JES spool files](#get-jes-spool-files)
@@ -195,6 +195,31 @@ A promise that resolves on success, rejects on error.
 connection.deleteDataset('HQL.AA.JCL')
   .then(function() {
     console.log('Deleted');
+  })
+  .catch(function(err) {
+    // handle error
+  });
+```
+
+#### Rename
+
+`rename(oldDataset, newDataset)` - Renames oldDataset to newDataset.
+
+##### Parameter
+
+* oldDataset - _string_ -  Old dataset name.
+* newDataset - _string_ -  New dataset name to rename to.
+
+##### Return
+
+A promise that resolves on success, rejects on error.
+
+##### Example
+
+```js
+connection.rename('HQL.AA.JCL', 'HQL.BB.JCL')
+  .then(function() {
+    console.log('Renamed');
   })
   .catch(function(err) {
     // handle error
