@@ -47,7 +47,7 @@ describe('Test cases for z/OS node accessor', function() {
                 return client.client;
             }); 
         }
-        return client.connect(USERNAME, PASSWD, HOST, PORT);
+        return client.connect({user: USERNAME, password: PASSWD, host: HOST});
     });
 
     beforeEach('set fixture values', function () {

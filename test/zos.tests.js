@@ -38,7 +38,7 @@ describe('Integration test cases for z/OS node accessor', function() {
 
     before('should connect successfully', function() {
         var client = new Client();
-        return client.connect(USERNAME, PASSWD, HOST)
+        return client.connect({user: USERNAME, password: PASSWD, host: HOST})
             .then(function (client) {
                 _client = client;
                 if (client.connected) {

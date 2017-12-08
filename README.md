@@ -45,16 +45,20 @@ This accessor leverages z/OS FTP server to interact with z/OS, it requires `JESI
 
 ### Connection
 
-Before connecting to a z/OS server, you need to initialize an instance using the constructor `new zosAccessor()`, then call the `connect(username, password, host, port)` method, where:
+Before connecting to a z/OS server, you need to initialize an instance using the constructor `new zosAccessor()`, then call the `connect(config)` method, where:
 
 ##### Parameter
 
-* username - _string_ - Username for authentication on z/OS.
-* password - _string_ - Password for authentication on z/OS.
-* host - _string (default: 'localhost')_ - The hostname or IP address of the z/OS server to connect to.
-* port - _integer_ (default: 21) - The port of the z/OS FTP server.
-* connTimeout - _integer_ (default: 10000) - How long (in milliseconds) to wait for the control connection to be established.
-* pasvTimeout - _integer_ (default: 30000) - How long (in milliseconds) to wait for a PASV data connection to be established.
+* config - _object_ - Configuration passed to the underlying ftp library, valid properties:
+  * user - _string_ - Username for authentication on z/OS. **Default:** 'anonymous'
+  * password - _string_ - Password for authentication on z/OS. **Default:** 'anonymous@'
+  * host - _string_ - The hostname or IP address of the z/OS server to connect to. **Default:** 'localhost'
+  * port - _integer_ - The port of the z/OS FTP server. **Default:** 21
+  * secure - _mixed_ - Set to true for both control and data connection encryption, 'control' for control connection encryption only, or 'implicit' for implicitly encrypted control connection (this mode is deprecated in modern times, but usually uses port 990) **Default:** false
+  * secureOptions - _object_ - Additional options to be passed to `tls.connect()`. **Default:** (none)
+  * connTimeout - _integer_ - How long (in milliseconds) to wait for the control connection to be established. **Default:** 10000
+  * pasvTimeout - _integer_ - How long (in milliseconds) to wait for a PASV data connection to be established. **Default:** 10000
+  * keepalive - _integer_ - How often (in milliseconds) to send a 'dummy' (NOOP) command to keep the connection alive. **Default:** 10000
 
 ##### Return
 
@@ -67,7 +71,7 @@ var Client = require('zosAccessor');
 
 var c = new Client();
 // connect to localhost:21 as hansome using password
-c.connect('myname', 'mypassword')
+c.connect({user: 'myname', password:'mypassword'})
   .then(function(connection) {
     // here connection equals to outer c
   })
