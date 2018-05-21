@@ -162,7 +162,7 @@ connection.uploadDataset(input, 'hosts')
 
 * dsn - _string_ -  Specify a full qualified dataset name, or USS file name. It **CAN NOT** contain any wildcard (*).
 * dataType - _string (default: 'ascii')_ -  Transfer data type, accepts three options `binary`,  `ascii`, `ascii_strip_eol`. When downloading an ascii dataset, dataType should be either `ascii` or `ascii_strip_eol` so that the FTP server converts `EBCDIC` characters to  `ASCII`, `ascii_strip_eol` tells FTP server not the append a CLRF to the end of each record.
-* stream - _boolean (default: false)_ -  `true` if you want to read a full dataset into memory (in Buffer), otherwise you get a [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams).
+* stream - _boolean (default: false)_ -  `true` if you want to obtain a [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams) of the data set content, or `false` to read a full dataset into memory (in Buffer).
 
 ##### Return
 
