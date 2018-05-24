@@ -375,7 +375,7 @@ connection.queryJCL(jobName, jobId)
 
 ##### Return
 
-A promise that resolves spool files populated by the job.
+A promise that resolves spool files populated by the job, each spool file includes its ddname, stepname, procstep, file content etc.
 
 ##### Example
 
