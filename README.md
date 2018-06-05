@@ -62,7 +62,7 @@ Before connecting to a z/OS server, you need to initialize an instance using the
 
 ##### Return
 
-A promise that resolves itself(the connection to z/OS), and rejects on any error.
+A promise that resolves itself (the connection to z/OS), and rejects on any error.
 
 ##### Example
 
@@ -262,7 +262,7 @@ connection.listJobs('HIS*')
 ##### Parameter
 
 * JCLText - _string_ -  The raw JCL string to be submitted, or the name of built-in JCLs if `cfg` is specified.
-* cfg - _object_ - configurations to the JCL, if this parameter is specified, then JCLText should be a name of the built-in JCLs, and the `cfg` should contain paramters for that JCL. Following is a list of built-in JCLs and their supported configurations:
+* cfg - _object_ - configurations to the JCL, if this parameter is specified, then JCLText should be a name of the built-in JCLs, and the `cfg` should contain parameters for that JCL. Following is a list of built-in JCLs and their supported configurations:
 
     * <h6>Allocate dataset</h6>
 
