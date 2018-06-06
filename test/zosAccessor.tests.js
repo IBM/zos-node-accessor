@@ -239,7 +239,7 @@ describe('Test cases for z/OS node accessor', function() {
         }
         // Add a delay here so the submitted job can be queried
         setTimeout(function() {
-            client.getJobLog('UTHELLO', submittedJobId, 'withMetaInfo').then(function (log) {
+            client.getJobLog('UTHELLO', submittedJobId, 'metaInfo').then(function (log) {
             getStub && expect(getStub.calledWith(submittedJobId+'.x')).to.be.true;
             expect(log.length).to.be.above(0);
             if (TEST_ZOS) {
