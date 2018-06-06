@@ -372,10 +372,29 @@ connection.queryJCL(jobName, jobId)
 
 * jobName - _string_ -  Name of the job.
 * jobId - _string_ -  Id of the job.
+* logFormat - Format of the returned log, currently it supports two formats:
+
+1. `"metaInfo"`: return job log with meta information, eg. 
+
+```js
+{
+  content: "1 //HRECALLW JOB...",
+  id: 2,
+  stepname: "JES2",
+  procstep: "N/A",
+  c: "H",
+  ddname: "JESJCL",
+  byteCount: 315
+}
+```
+
+2. Otherwise: uninterpreted raw string log, this is the default behavior for compatibility reason.
+
+See https://github.com/IBM/zos-node-accessor/issues/6 for more details.
 
 ##### Return
 
-A promise that resolves spool files populated by the job.
+A promise that resolves spool files populated by the job, each spool file includes its ddname, stepname, procstep, file content etc.
 
 ##### Example
 

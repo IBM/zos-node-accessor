@@ -229,18 +229,35 @@ describe('Test cases for z/OS node accessor', function() {
             var stream = require('stream');
             var bufferStream = new stream.PassThrough();
             bufferStream.end(new Buffer('MINUTES EXECUTION TIME\n!! END OF JES SPOOL FILE !!'));
-            var stub = sinon.stub(client.client, 'get').callsArgWith(1, null, bufferStream);
+            var getStub = sinon.stub(client.client, 'get').callsArgWith(1, null, bufferStream);
+            var listStub = sinon.stub(client.client, 'list').callsArgWith(1, null, ('JOBNAME  JOBID    OWNER    STATUS CLASS\n' +
+                '                                HRECALLW JOB19142 VPADEV   OUTPUT A        RC=0000\n' +
+                '                                --------\n' +
+                '                                         ID  STEPNAME PROCSTEP C DDNAME   BYTE-COUNT\n' +
+                '                                         001 JES2        N/A   H JESMSGLG      1584\n' +
+                '                                1 spool files').split('\n'));
         }
         // Add a delay here so the submitted job can be queried
         setTimeout(function() {
-            client.getJobLog('UTHELLO', submittedJobId).then(function (log) {
-            stub && expect(stub.calledWith(submittedJobId+'.x')).to.be.true;
-            expect(log).to.include('!! END OF JES SPOOL FILE !!');
+            client.getJobLog('UTHELLO', submittedJobId, 'metaInfo').then(function (log) {
+            getStub && expect(getStub.calledWith(submittedJobId+'.x')).to.be.true;
+            expect(log.length).to.be.above(0);
+            if (TEST_ZOS) {
+                expect(log[0].content).to.be.a('string');
+                expect(log[0].ddname).to.be.a('string');
+                expect(log[0].stepname).to.be.a('string');
+            } else {
+                expect(log[0].content).to.equal('MINUTES EXECUTION TIME');
+                expect(log[0].ddname).to.equal('JESMSGLG');
+                expect(log[0].stepname).to.equal('JES2');
+                expect(log[0].byteCount).to.equal(1584);
+            }
             done();
         }).catch(function(err) {
             done(err);
         }).finally(function () {
-            stub && stub.restore();
+            getStub && getStub.restore();
+            listStub && listStub.restore();
         })
         }, TEST_ZOS ? 5000 : 0);
     });
