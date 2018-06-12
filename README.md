@@ -43,6 +43,7 @@ This accessor leverages z/OS FTP server to interact with z/OS, it requires `JESI
   * [Query job status](#query-job)
   * [Get job status](#get-job-status)
   * [Get JES spool files](#get-jes-spool-files)
+  * [Delete job](#delete-job)
 
 ### Connection
 
@@ -367,12 +368,11 @@ connection.queryJob(jobName, jobId)
 
 #### Get job status
 
-`getJobStatus(jobId, jobName)` -  Get job status specified by jobId, the optional jobName can be used to limit query under that name.
+`getJobStatus(jobId)` -  Get job status specified by jobId.
 
 ##### Parameter
 
 * jobId - _string_ -  Id of the job.
-* jobName - _string_ -  Name of the job. **Default:** '*'
 
 ##### Return
 
@@ -412,11 +412,11 @@ connection.getJobStatus(jobId)
 
 #### Get JES spool files
 
-`getJobLog(jobName, jobId)` -  Get jes spool files identified by jobName and jobId.
+`getJobLog(jobName, jobId)` - Get jes spool files identified by jobName and jobId.
 
 ##### Parameter
 
-* jobName - _string_ -  Name of the job. **Default:** 'x'
+* jobName - _string_ -  Name of the job. **Default:** '*'
 * jobId - _string_ -  Id of the job.
 * spoolFileIndex - _string | integer_ - Index of the spool file to get. Number of spool files can be found using `getJobStatus`, specifying 'x' will return all spool files joined with the `!! END OF JES SPOOL FILE !!`. **Default:** 'x'
 
@@ -431,6 +431,30 @@ connection.getJobLog(jobName, jobId, 'x')
   .then(function(jobLog) {
     console.log('Job id is:');
     console.log(jobLog);
+  })
+  .catch(function(err) {
+    // handle error
+  });
+```
+
+#### Delete job
+
+`deleteJob(jobId)` - Purge/delete job by job id.
+
+##### Parameter
+
+* jobId - _string_ -  Id of the job.
+
+##### Return
+
+A promise that resolves on success, rejects on error.
+
+##### Example
+
+```js
+connection.deleteJob('JOB25186')
+  .then(function() {
+    console.log('Deleted');
   })
   .catch(function(err) {
     // handle error
