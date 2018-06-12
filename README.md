@@ -40,7 +40,8 @@ This accessor leverages z/OS FTP server to interact with z/OS, it requires `JESI
       * [Allocate dataset](#allocate-dataset)
       * [Copy dataset](#copy-dataset)
       * [Initiate HRECALL](#initiate-hrecall)
-  * [Query job status](#query-job-status)
+  * [Query job status](#query-job)
+  * [Get job status](#get-job-status)
   * [Get JES spool files](#get-jes-spool-files)
 
 ### Connection
@@ -321,9 +322,9 @@ connection.submitJCL('HRECALLW', {INPUT: 'AA.BB'})
   });
 ```
 
-#### Query job status
+#### Query job
 
-`queryJob(jobName, jobId)` -  Get job status identified by job name and job id.
+`queryJob(jobName, jobId)` -  Query job status identified by job name and job id. _(Deprecated, use `getJobStatus` for more details.)_
 
 ##### Parameter
 
@@ -343,7 +344,7 @@ A promise that resolves status of the job, it is one of the following values:
 ##### Example
 
 ```js
-connection.queryJCL(jobName, jobId)
+connection.queryJob(jobName, jobId)
   .then(function (status) {
       switch(status) {
           case connection.RC_SUCCESS:
@@ -364,42 +365,69 @@ connection.queryJCL(jobName, jobId)
   });
 ```
 
+#### Get job status
+
+`getJobStatus(jobId, jobName)` -  Get job status specified by jobId, the optional jobName can be used to limit query under that name.
+
+##### Parameter
+
+* jobId - _string_ -  Id of the job.
+* jobName - _string_ -  Name of the job. **Default:** '*'
+
+##### Return
+
+A promise that resolves job status
+```js
+  {
+   jobname: "HRECALLW",
+   jobid: "JOB06385",
+   owner: "USER",
+   status: "OUTPUT",
+   class: "A",
+   rc: 0,
+   spoolFiles: [
+          {
+           id: 2,
+           stepname: "JES2",
+           procstep: "N/A",
+           c: "H",
+           ddname: "JESJCL",
+           byteCount: 315
+         }
+   ]}
+```
+
+##### Example
+
+```js
+connection.getJobStatus(jobId)
+  .then(function(jobStatus) {
+    console.log('Job status is:');
+    console.log(jobStatus);
+  })
+  .catch(function(err) {
+    // handle error
+  });
+```
+
 #### Get JES spool files
 
 `getJobLog(jobName, jobId)` -  Get jes spool files identified by jobName and jobId.
 
 ##### Parameter
 
-* jobName - _string_ -  Name of the job.
+* jobName - _string_ -  Name of the job. **Default:** 'x'
 * jobId - _string_ -  Id of the job.
-* logFormat - Format of the returned log, currently it supports two formats:
-
-1. `"metaInfo"`: return job log with meta information, eg. 
-
-```js
-{
-  content: "1 //HRECALLW JOB...",
-  id: 2,
-  stepname: "JES2",
-  procstep: "N/A",
-  c: "H",
-  ddname: "JESJCL",
-  byteCount: 315
-}
-```
-
-2. Otherwise: uninterpreted raw string log, this is the default behavior for compatibility reason.
-
-See https://github.com/IBM/zos-node-accessor/issues/6 for more details.
+* spoolFileIndex - _string | integer_ - Index of the spool file to get. Number of spool files can be found using `getJobStatus`, specifying 'x' will return all spool files joined with the `!! END OF JES SPOOL FILE !!`. **Default:** 'x'
 
 ##### Return
 
-A promise that resolves spool files populated by the job, each spool file includes its ddname, stepname, procstep, file content etc.
+A promise that resolves spool files populated by the job
 
 ##### Example
 
 ```js
-connection.getJobLog(jobName, jobId)
+connection.getJobLog(jobName, jobId, 'x')
   .then(function(jobLog) {
     console.log('Job id is:');
     console.log(jobLog);
