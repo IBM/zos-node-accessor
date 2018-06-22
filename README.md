@@ -236,11 +236,14 @@ connection.rename('HQL.AA.JCL', 'HQL.BB.JCL')
 
 #### List jobs
 
-`listJobs(jobName)` - List JES jobs under a certain job name.
+`listJobs(jobName)` - List JES jobs matching query condition
 
 ##### Parameter
 
-* jobName - _string_ -  Specify a JES job name, it can contain a wildcard (*).
+* condition - _object_ -  An object whose valid keys are:
+  *  jobName: specify a JES job name, it can contain a wildcard (*)
+  *  owner:   specify a JES job owner, it can contain a wildcard (*)
+  *  status:  specify a JES job status, eg. ALL, OUTPUT
 
 ##### Return
 
@@ -249,7 +252,7 @@ A promise that resolves an array of jobs, each item in the array is a string sep
 ##### Example
 
 ```js
-connection.listJobs('HIS*')
+connection.listJobs({jobName: 'TSU*', owner: 'MY-NAME'})
   .then(function(jobList) {
   })
   .catch(function(err) {
