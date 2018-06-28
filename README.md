@@ -29,6 +29,7 @@ This accessor leverages z/OS FTP server to interact with z/OS, it requires `JESI
 
 * [Connection](#connection)
 * [MVS dataset or USS files](#mvs-dataset-or-uss-files)
+  * [Allocate](#allocate)
   * [List](#list)
   * [Upload](#upload-mvs-dataset-or-uss-file)
   * [Read](#read-mvs-dataset-or-uss-file)
@@ -84,6 +85,53 @@ c.connect({user: 'myname', password:'mypassword'})
 
 ### MVS dataset or USS files
 
+#### Allocate
+
+`allocateDataset(datasetName, allocateOption)` - Allocate dataset.
+
+##### Parameter
+
+* datasetName - _string_ -  Dataset name to allocate.
+* allocateOption - _object_ -  An object whose keys are parameters used when allocating dataset. The following table demonstrates supported options.
+
+Option Key | Description
+---- | ---
+SPACETYPE	|	allocation units
+BLKSIZE	|	blocksize
+DATACLASS	|	data class
+DIRECTORY	|	directory blocks
+DSNTYPE	|	data set name type
+EATTR	|	extended attributes
+LRECL	|	logical record length
+MGMTCLASS	|	management class
+DCBDSN	|	model DCB values
+PDSTYPE	|	PDS type
+PRIMARY	|	primary space
+RECFM	|	record format
+RETPD	|	retention period
+SECONDARY	|	secondary space
+STORCLASS	|	storage class
+UNITNAME	|	unit
+VCOUNT	|	volume count
+UCOUNT	|	unit count
+VOLUME	|	volume serial number
+
+##### Return
+
+A promise that resolves on success, rejects on error.
+
+##### Example
+
+```js
+connection.allocateDataset('ABC.DEF', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320})
+  .then(function() {
+    console.log('Success');
+  })
+  .catch(function(err) {
+    // handle error
+  });
+```
+
 #### List
 
 `listDataset(dsnOrDir)` - List MVS datasets or USS files
@@ -137,6 +185,7 @@ connection.listDataset('/u/user1/')
 * input - _any_ -  A [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams), a [Buffer](https://nodejs.org/api/buffer.html), or a path to a local file that needs uploading.
 * destDataset - _string_ -  Dataset name to used to store the uploaded file, if it starts with `/` this file will be uploaded to USS.
 * dataType - _string (default: ascii)_ -  Transfer data type, it should be 'ascii' or 'binary', **when transfering 'ascii' files, the end-of-line sequence of input should always be `\r\n`**, otherwise the transfered file will get truncated.
+* allocateOption - _object_ -  An object whose keys are parameters used when allocating dataset. can be "LRECL", "RECFM", "BLKSIZE" etc, refer to the `allocateDataset()` for more details.
 
 ##### Return
 

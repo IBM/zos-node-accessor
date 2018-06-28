@@ -124,7 +124,7 @@ describe('Test cases for z/OS node accessor', function() {
         if(!TEST_ZOS) {
             var stub = sinon.stub(client.client, 'put').callsArgWith(2, null);
         }
-        return client.uploadDataset('just delete me', uploadDSN).finally(function () {
+        return client.uploadDataset('just delete me', uploadDSN, 'ascii', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320}).finally(function () {
             stub && stub.restore();
         });
     });
