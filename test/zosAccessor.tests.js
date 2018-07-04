@@ -28,7 +28,7 @@ if(!TEST_ZOS) {
     console.error('Using a mocked z/OS FTP server');
 }
 
-var rawDatasetList, rawUSSList;
+var rawDatasetList, rawUSSList, rawJobList;
 
 describe('Test cases for z/OS node accessor', function() {
     this.timeout(15000);
@@ -108,13 +108,23 @@ describe('Test cases for z/OS node accessor', function() {
             'Migrated                                                CPPOBJS.OBJ',
             '250 List completed successfully.'
         ];
+
+        rawJobList = [
+            'JOBNAME  JOBID    OWNER    STATUS CLASS',
+            'HISCONVT JOB17459 MIAOCX   OUTPUT A        RC=0000 6 spool files',
+            'HISCONVT JOB17462 MIAOCX   ACTIVE A',
+            'EZA2284I JOB00083 USER1 OUTPUT A ABEND=806 3 spool files',
+            'EZA2284I JOB00082 USER1 OUTPUT A (JCL error) 3 spool files',
+            'EZA2284I JOB00093 USER1 INPUT A -HELD-',
+            'HISCONVT JOB17463 MIAOCX   held'
+        ];
     });
 
     it('can upload to remote dataset', function() {
         if(!TEST_ZOS) {
             var stub = sinon.stub(client.client, 'put').callsArgWith(2, null);
         }
-        return client.uploadDataset('just delete me', uploadDSN).finally(function () {
+        return client.uploadDataset('just delete me', uploadDSN, 'ascii', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320}).finally(function () {
             stub && stub.restore();
         });
     });
@@ -285,17 +295,7 @@ describe('Test cases for z/OS node accessor', function() {
     });
 
     it('can parse job list', function () {
-        var stub = sinon.stub(client, 'listJobs', function() {
-            return Q.resolve([
-                'JOBNAME  JOBID    OWNER    STATUS CLASS',
-                'HISCONVT JOB17459 MIAOCX   OUTPUT A        RC=0000 6 spool files',
-                'HISCONVT JOB17462 MIAOCX   ACTIVE A',
-                'EZA2284I JOB00083 USER1 OUTPUT A ABEND=806 3 spool files',
-                'EZA2284I JOB00082 USER1 OUTPUT A (JCL error) 3 spool files',
-                'EZA2284I JOB00093 USER1 INPUT A -HELD-',
-                'HISCONVT JOB17463 MIAOCX   held'
-            ]);
-        });
+        var stub = sinon.stub(client.client, 'list').callsArgWith(0, null, rawJobList);
         return Q.all([
             client.queryJob('any_name', 'JOB17459').then(function (status) {
                 expect(status).to.be.equal(Client.RC_SUCCESS);
@@ -319,6 +319,17 @@ describe('Test cases for z/OS node accessor', function() {
                 expect(status).to.be.equal(Client.RC_NOT_FOUND);
             })
         ]).finally(function () {
+            stub && stub.restore();
+        });
+    });
+
+    it('can list job on condition', function () {
+        if(!TEST_ZOS) {
+            var stub = sinon.stub(client.client, 'list').callsArgWith(0, null, rawJobList);
+        }
+        return client.listJobs({jobName: '*'}).then(function (jobList) {
+            expect(jobList.length).to.be.above(1);
+        }).finally(function () {
             stub && stub.restore();
         });
     });
