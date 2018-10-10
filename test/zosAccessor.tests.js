@@ -28,7 +28,7 @@ if(!TEST_ZOS) {
     console.error('Using a mocked z/OS FTP server');
 }
 
-var rawDatasetList, rawUSSList, rawJobList;
+var rawDatasetList, rawMemberList, rawUSSList, rawJobList;
 
 describe('Test cases for z/OS node accessor', function() {
     this.timeout(15000);
@@ -109,6 +109,12 @@ describe('Test cases for z/OS node accessor', function() {
             '250 List completed successfully.'
         ];
 
+        rawMemberList = [
+            ' Name     VV.MM   Created       Changed      Size  Init   Mod   Id',
+            'JVBR30    01.01 2018/09/07 2018/09/07 03:52    13    13     0 VPADEV',
+            'JVBR42    01.01 2018/09/07 2018/09/07 07:41    13    13     0 VPADEV'
+        ];
+
         rawJobList = [
             'JOBNAME  JOBID    OWNER    STATUS CLASS',
             'HISCONVT JOB17459 MIAOCX   OUTPUT A        RC=0000 6 spool files',
@@ -168,6 +174,13 @@ describe('Test cases for z/OS node accessor', function() {
         expect(datasetList.length).to.be.equal(45);
         expect(datasetList.filter(function(e){return e.hasOwnProperty('Ext')}).length)
             .to.be.equal(44);
+    });
+
+    it('can parse PDS member list correctly', function() {
+        var datasetList = client.parsePDSMembers(rawMemberList);
+        expect(datasetList).to.be.an('array');
+        expect(datasetList.length).to.be.equal(2);
+        expect(datasetList[0]['Changed']).to.be.equal('2018/09/07 03:52');
     });
 
     it('can parse MVS data set list without space padding correctly', function() {

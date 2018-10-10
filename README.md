@@ -1,6 +1,7 @@
 # z/OS Node Accessor
 
 [![Build Status](https://travis-ci.org/IBM/zos-node-accessor.svg)](https://travis-ci.org/IBM/zos-node-accessor)
+[![Module LTS Adopted'](https://img.shields.io/badge/Module%20LTS-Adopted-brightgreen.svg?style=flat)](http://github.com/CloudNativeJS/ModuleLTS)
 
 A Node module to help Node.JS developers interacting with z/OS easily, taking 
 advantage of z/OS FTP service. It's recommended to be deployed on z/OS, 
@@ -87,12 +88,12 @@ c.connect({user: 'myname', password:'mypassword'})
 
 #### Allocate
 
-`allocateDataset(datasetName, allocateOption)` - Allocate dataset.
+`allocateDataset(datasetName, allocateParams)` - Allocate dataset.
 
 ##### Parameter
 
 * datasetName - _string_ -  Dataset name to allocate.
-* allocateOption - _object_ -  An object whose keys are parameters used when allocating dataset. The following table demonstrates supported options.
+* allocateParams - _object | string_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}.
 
 Option Key | Description
 ---- | ---
@@ -138,7 +139,7 @@ connection.allocateDataset('ABC.DEF', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 32
 
 ##### Parameter
 
-* dsnOrDir - _string_ -  Specify a full qualified MVS dataset name, which can contain wildcard (*). Or USS directory, which **CAN NOT** contain wildcard (*).
+* dsnOrDir - _string_ -  Specify a full qualified dataset name, supporting wildcards (* or ?), PDS members (HLQ.JCL(*)) and USS directory.
 
 ##### Return
 
@@ -178,14 +179,14 @@ connection.listDataset('/u/user1/')
 
 #### Upload MVS dataset or USS file
 
-`uploadDataset(input, destDataset, dataType)` - Upload a local file to MVS dataset or USS file.
+`uploadDataset(input, destDataset, dataType, allocateParams)` - Upload a local file to MVS dataset or USS file.
 
 ##### Parameter
 
 * input - _any_ -  A [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams), a [Buffer](https://nodejs.org/api/buffer.html), or a path to a local file that needs uploading.
 * destDataset - _string_ -  Dataset name to used to store the uploaded file, if it starts with `/` this file will be uploaded to USS.
 * dataType - _string (default: ascii)_ -  Transfer data type, it should be 'ascii' or 'binary', **when transfering 'ascii' files, the end-of-line sequence of input should always be `\r\n`**, otherwise the transfered file will get truncated.
-* allocateOption - _object_ -  An object whose keys are parameters used when allocating dataset. can be "LRECL", "RECFM", "BLKSIZE" etc, refer to the `allocateDataset()` for more details.
+* allocateParams - _object | string_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}.
 
 ##### Return
 
