@@ -232,11 +232,15 @@ describe('Test cases for z/OS node accessor', function() {
     var submittedJobId,
         jobStatusResp = '' +
         'JOBNAME  JOBID    OWNER    STATUS CLASS\n' +
-        'UTHELLO __JOB_ID__ VPADEV   OUTPUT A        RC=0000\n' +
+        'UTHELLO JOB12345 VPADEV   OUTPUT A        RC=0000\n' +
         '--------\n' +
-        '       ID  STEPNAME PROCSTEP C DDNAME   BYTE-COUNT\n' +
-        '       001 JES2        N/A   H JESMSGLG      1584\n' +
-        '1 spool files';
+        '         ID  STEPNAME PROCSTEP C DDNAME   BYTE-COUNT \n' +
+        '         001 JES2              K JESMSGLG      1206 \n' +
+        '         002 JES2              K JESJCL        3134 \n' +
+        '         003 JES2              K JESYSMSG      2480 \n' +
+        '         004 JAVA     JAVAJVM  K SYSOUT         801 \n' +
+        '         005 JAVA     JAVAJVM  K STDOUT       22258 \n' +
+        '5 spool files ';
     it('can submit JCL', function() {
         if(!TEST_ZOS) {
             var stub = sinon.stub(client.client, 'put', function (jcl, path, cb) {
@@ -248,7 +252,7 @@ describe('Test cases for z/OS node accessor', function() {
         var helloJCL = "//UTHELLO JOB (999,POK),'METAL',CLASS=A,MSGCLASS=H,NOTIFY=&SYSUID\r\n//STEP0001 EXEC PGM=IEBGENER\r\n//SYSIN    DD DUMMY\r\n//SYSPRINT DD SYSOUT=*\r\n//SYSUT1   DD *\r\nHELLO, WORLD\r\n/*\r\n//SYSUT2   DD SYSOUT=*\r\n//"
         return client.submitJCL(helloJCL).then(function (jobId) {
             submittedJobId = jobId;
-            jobStatusResp = jobStatusResp.replace('__JOB_ID__', submittedJobId);
+            jobStatusResp = jobStatusResp.replace('JOB12345', submittedJobId);
             expect(jobId).to.match(/^\w+\d+$/);
         }).finally(function () {
             stub && stub.restore();
@@ -278,7 +282,7 @@ describe('Test cases for z/OS node accessor', function() {
         if(!TEST_ZOS) {
             var stream = require('stream');
             var bufferStream = new stream.PassThrough();
-            bufferStream.end(new Buffer('MINUTES EXECUTION TIME\n!! END OF JES SPOOL FILE !!'));
+            bufferStream.end(new Buffer('MINUTES EXECUTION TIME\n!! END OF JES SPOOL FILE !!AAA\n!! END OF JES SPOOL FILE !!'));
             var getStub = sinon.stub(client.client, 'get').callsArgWith(1, null, bufferStream);
             var listStub = sinon.stub(client.client, 'list').callsArgWith(1, null, jobStatusResp.split('\n'));
         }
@@ -295,7 +299,7 @@ describe('Test cases for z/OS node accessor', function() {
                 expect(log[0].content).to.equal('MINUTES EXECUTION TIME');
                 expect(log[0].ddname).to.equal('JESMSGLG');
                 expect(log[0].stepname).to.equal('JES2');
-                expect(log[0].byteCount).to.equal(1584);
+                expect(log[0].byteCount).to.equal(1206);
             }
             done();
         }).catch(function(err) {
