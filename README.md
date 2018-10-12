@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/IBM/zos-node-accessor.svg)](https://travis-ci.org/IBM/zos-node-accessor)
 [![Module LTS Adopted'](https://img.shields.io/badge/Module%20LTS-Adopted-brightgreen.svg?style=flat)](http://github.com/CloudNativeJS/ModuleLTS)
+[![IBM Support](https://img.shields.io/badge/Support-IBM%20Runtimes-brightgreen.svg?style=flat)](http://ibm.biz/node-support)
 
 A Node module to help Node.JS developers interacting with z/OS easily, taking 
 advantage of z/OS FTP service. It's recommended to be deployed on z/OS, 
