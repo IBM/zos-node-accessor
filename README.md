@@ -515,6 +515,14 @@ connection.deleteJob('JOB25186')
   });
 ```
 
+## Module Long Term Support Policy
+
+This module adopts the [Module Long Term Support (LTS)](http://github.com/CloudNativeJS/ModuleLTS) policy, with the following End Of Life (EOL) dates:
+
+| Module Version   | Release Date | Minimum EOL | EOL With     | Status  |
+|------------------|--------------|-------------|--------------|---------|
+| 1.x.x	         | Oct 2018    | Dec 2019    |              | Current |
+
 ## License
 
 [Eclipse Public License (EPL)](LICENSE)
