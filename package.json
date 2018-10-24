@@ -1,10 +1,13 @@
 {
   "name": "zos-node-accessor",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Accessing z/OS dataset and interacting with JES in NodeJS way",
   "main": "./lib/zosAccessor",
   "scripts": {
     "test": "mocha test/zosAccessor.tests.js"
+  },
+  "bin": {
+    "zos": "./bin/zos-cli.js"
   },
   "repository": {
     "type": "git",
