@@ -17,6 +17,7 @@ for (var i=0; i < argv.length; i+=1) {
 if (Object.keys(connectOptions).length === 0) {
     console.error('Usage: zos [connect-options] method ...method-arguments');
     console.error('\nconnect-options are arguments passed to the "connect" method, each should start with "--".');
+    console.error('method can be any one that "zos-node-accessor" supports, see them here: https://github.com/IBM/zos-node-accessor#usage.');
     console.error("\neg. zos --host MYSERVER --user ABC --password SECRET submitJCL /path/to/local.JCL");
     process.exit(0);
 }
