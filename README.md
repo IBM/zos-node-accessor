@@ -8,8 +8,7 @@ A Node module to help Node.JS developers interacting with z/OS easily, taking
 advantage of z/OS FTP service. It's recommended to be deployed on z/OS, 
 to avoid transferring user account/password in clear-text over network. IBM
 SDK for Node.js - z/OS is available at 
-[https://developer.ibm.com/mainframe/products/ibm-sdk-for-node-js-z-os/]
-(https://developer.ibm.com/mainframe/products/ibm-sdk-for-node-js-z-os/).
+[https://developer.ibm.com/mainframe/products/ibm-sdk-for-node-js-z-os/](https://developer.ibm.com/mainframe/products/ibm-sdk-for-node-js-z-os/).
 
 ## Installation & Test
 
