@@ -72,7 +72,7 @@ A promise that resolves itself (the connection to z/OS), and rejects on any erro
 ##### Example
 
 ```js
-var Client = require('zosAccessor');
+var Client = require('zos-node-accessor');
 
 var c = new Client();
 // connect to localhost:21 as hansome using password
