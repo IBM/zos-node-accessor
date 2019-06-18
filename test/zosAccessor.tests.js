@@ -12,9 +12,8 @@
 /****************************************************************************/
 
 var expect = require('chai').expect;
-var fs = require('fs');
-var path = require('path');
 var sinon = require('sinon');
+var stream = require('stream');
 var Q = require('q');
 var Client = require('../lib/zosAccessor');
 
@@ -45,7 +44,7 @@ describe('Test cases for z/OS node accessor', function() {
             sinon.stub(client.client, 'on', function(arg, callback) {
                 callback(arg);
                 return client.client;
-            }); 
+            });
         }
         return client.connect({user: USERNAME, password: PASSWD, host: HOST});
     });
@@ -280,7 +279,6 @@ describe('Test cases for z/OS node accessor', function() {
 
     it('can get job log', function(done) {
         if(!TEST_ZOS) {
-            var stream = require('stream');
             var bufferStream = new stream.PassThrough();
             bufferStream.end(new Buffer('MINUTES EXECUTION TIME\n!! END OF JES SPOOL FILE !!AAA\n!! END OF JES SPOOL FILE !!'));
             var getStub = sinon.stub(client.client, 'get').callsArgWith(1, null, bufferStream);
