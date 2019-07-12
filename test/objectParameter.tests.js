@@ -74,25 +74,25 @@ describe('Test cases for the object parameter of', function() {
 
         it('can list job with no parameter', function () {
             return client.listJobs().then(function () {
-                sinon.assert.calledWith(stubSite, 'FILETYPE=JES JESJOBNAME=* JESOWNER=alice JESSTATUS=*');
+                sinon.assert.calledWith(stubSite, 'FILETYPE=JES JESJOBNAME=* JESOWNER=alice JESSTATUS=ALL');
             });
         });
 
         it('can list job with the string of job name', function () {
             return client.listJobs('jobA').then(function () {
-                sinon.assert.calledWith(stubSite, 'FILETYPE=JES JESJOBNAME=jobA JESOWNER=alice JESSTATUS=*');
+                sinon.assert.calledWith(stubSite, 'FILETYPE=JES JESJOBNAME=jobA JESOWNER=alice JESSTATUS=ALL');
             });
         });
 
         it('can list job with the option object including jobName', function () {
             return client.listJobs({jobName: '*'}).then(function () {
-                sinon.assert.calledWith(stubSite, 'FILETYPE=JES JESJOBNAME=* JESOWNER=alice JESSTATUS=*');
+                sinon.assert.calledWith(stubSite, 'FILETYPE=JES JESJOBNAME=* JESOWNER=alice JESSTATUS=ALL');
             });
         });
 
         it('can list job with the option object including jobName and owner', function () {
             return client.listJobs({jobName: '*', owner: 'bob'}).then(function () {
-                sinon.assert.calledWith(stubSite, 'FILETYPE=JES JESJOBNAME=* JESOWNER=bob JESSTATUS=*');
+                sinon.assert.calledWith(stubSite, 'FILETYPE=JES JESJOBNAME=* JESOWNER=bob JESSTATUS=ALL');
             });
         });
 
@@ -107,13 +107,13 @@ describe('Test cases for the object parameter of', function() {
 
         it('can query job with the string of job name and job ID', function () {
             return client.queryJob('jobA', 'job001').then(function () {
-                sinon.assert.calledWith(stubSite, 'FILETYPE=JES JESJOBNAME=jobA JESOWNER=alice JESSTATUS=* JESJOBID=job001');
+                sinon.assert.calledWith(stubSite, 'FILETYPE=JES JESJOBNAME=jobA JESOWNER=alice JESSTATUS=ALL JESJOBID=job001');
             });
         });
 
         it('can query job with the option object including jobName, owner, and jobId', function () {
             return client.queryJob({jobName: '*', owner: 'bob', jobId: 'job001'}).then(function () {
-                sinon.assert.calledWith(stubSite, 'FILETYPE=JES JESJOBNAME=* JESOWNER=bob JESSTATUS=* JESJOBID=job001');
+                sinon.assert.calledWith(stubSite, 'FILETYPE=JES JESJOBNAME=* JESOWNER=bob JESSTATUS=ALL JESJOBID=job001');
             });
         });
 
