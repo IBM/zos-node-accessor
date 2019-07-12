@@ -287,14 +287,19 @@ connection.rename('HQL.AA.JCL', 'HQL.BB.JCL')
 
 #### List jobs
 
-`listJobs(jobName)` - List JES jobs matching query condition
+`listJobs(jobNameOrOption)` - List JES jobs matching the given jobName or query option. The following parameters are accepted:
 
 ##### Parameter
 
-* condition - _object_ -  An object whose valid keys are:
-  *  jobName: specify a JES job name, it can contain a wildcard (*)
-  *  owner:   specify a JES job owner, it can contain a wildcard (*)
-  *  status:  specify a JES job status, eg. ALL, OUTPUT
+* jobName - specify a JES job name, it can contain a wildcard (*)
+
+##### Parameter
+
+* option - _object_ -  Option which contains:
+  *  jobName - _string_ - specify a JES job name, which is optional and can contain a wildcard (*)
+  *  jobId - _string_ - specify a JES job ID, which is optional
+  *  owner - _string_ - specify a JES job owner, which is optional and can contain a wildcard (*)
+  *  status - _string_ - specify a JES job status, eg. ALL, OUTPUT, which is optional  
 
 ##### Return
 
@@ -379,12 +384,19 @@ connection.submitJCL('HRECALLW', {INPUT: 'AA.BB'})
 
 #### Query job
 
-`queryJob(jobName, jobId)` -  Query job status identified by job name and job id. _(Deprecated, use `getJobStatus` for more details.)_
+`queryJob(jobNameOrOption, jobId)` -  Query job status identified by job name and job id. The following parameters are accepted. _(Deprecated, use `getJobStatus` for more details.)_
 
 ##### Parameter
 
 * jobName - _string_ -  Name of the job.
 * jobId - _string_ -  Id of the job.
+
+##### Parameter
+
+ * option - _object_ - Option which contains:
+   *  jobName - _string_ - specify a JES job name, which is optional and can contain a wildcard (*)
+   *  jobId - _string_ - specify a JES job ID, which is required
+   *  owner - _string_ - specify a JES job owner, which is optional and can contain a wildcard (*)
 
 ##### Return
 
@@ -422,11 +434,18 @@ connection.queryJob(jobName, jobId)
 
 #### Get job status
 
-`getJobStatus(jobId)` -  Get job status specified by jobId.
+`getJobStatus(jobIdOrOption)` -  Get job status specified by jobId or query option. The following parameters are accepted:
 
 ##### Parameter
 
-* jobId - _string_ -  Id of the job.
+* jobId - _string_ -  Specify JES job ID
+
+##### Parameter
+
+* option - _object_ - Option which contains:
+  *  jobId - _string_ - specify a JES job ID, which is required
+  *  owner - _string_ - specify a JES job owner, which is optional and can contain a wildcard (*)
+
 
 ##### Return
 
@@ -466,13 +485,22 @@ connection.getJobStatus(jobId)
 
 #### Get JES spool files
 
-`getJobLog(jobName, jobId)` - Get jes spool files identified by jobName and jobId.
+`getJobLog(jobNameOrOption, jobId)` - Get jes spool files identified by jobName and jobId. The following parameters are accepted:
 
 ##### Parameter
 
 * jobName - _string_ -  Name of the job. **Default:** '*'
 * jobId - _string_ -  Id of the job.
 * spoolFileIndex - _string | integer_ - Index of the spool file to get. Number of spool files can be found using `getJobStatus`, specifying 'x' will return all spool files joined with the `!! END OF JES SPOOL FILE !!`. **Default:** 'x'
+
+##### Parameter
+
+* option - _object_ - Option which contains:
+  *  jobName: Optional job name, default to '*'
+  *  jobId - _string_ - Specify a JES job ID, which is required
+  *  fileId - _string_ - Spool file index (1, 2, 3...) or 'x' returning all spool files joined with the `!! END OF JES SPOOL FILE !!`
+  *  owner - _string_ - Specify a JES job owner, which is optional and can contain a wildcard (*)
+
 
 ##### Return
 
@@ -493,11 +521,17 @@ connection.getJobLog(jobName, jobId, 'x')
 
 #### Delete job
 
-`deleteJob(jobId)` - Purge/delete job by job id.
+`deleteJob(jobIdOrOption)` - Purge/delete job by job id. The following parameters are accepted:
 
 ##### Parameter
 
-* jobId - _string_ -  Id of the job.
+* jobId - _string_ -  JES job ID
+
+##### Parameter
+
+* option - _object_ - Option which contains:
+  *  jobId - _string_ - specify a JES job ID, which is required
+  *  owner - _string_ - specify a JES job owner, which is optional and can contain a wildcard (*)
 
 ##### Return
 
