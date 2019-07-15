@@ -123,6 +123,36 @@ describe('Test cases for z/OS node accessor', function() {
             'EZA2284I JOB00093 USER1 INPUT A -HELD-',
             'HISCONVT JOB17463 MIAOCX   held'
         ];
+
+        rawJCLMSGLG = [
+            '1                     J E S 2  J O B  L O G  --  S Y S T E M  C E C 3  --  N O D E  X R F M C L          ',
+            '0 ',
+             '02.07.44 JOB07186 ---- FRIDAY,    12 JUL 2019 ----',
+             '02.07.44 JOB07186  IRR010I  USERID USER001  IS ASSIGNED TO THIS JOB.',
+             '02.07.44 JOB07186  ICH70001I USER001  LAST ACCESS AT 02:06:03 ON FRIDAY, JULY 12, 2019',
+             '02.07.44 JOB07186  $HASP373 TESTJOB1 STARTED - INIT 10   - CLASS A        - SYS CEC3',
+             '02.07.44 JOB07186  IEF403I TESTJOB1 - STARTED - TIME=02.07.44',
+             '02.07.45 JOB07186  - ==============================================================================================================',
+             '02.07.45 JOB07186  -                                    REGION        --- STEP TIMINGS ---                   ----PAGING COUNTS----',
+             '02.07.45 JOB07186  - STEPNAME PROCSTEP PGMNAME     CC     USED      CPU TIME  ELAPSED TIME    EXCP     SERV  PAGE  SWAP   VIO SWAPS',
+             '02.07.45 JOB07186  - STARNOTE          BPXBATCH    00     168K    0:00:00.04    0:00:00.89     185      554     0     0     0     0',
+             '02.07.54 JOB07186  - TESTJOB1 JAVAJVM  JVMLDM76    00      56K    0:01:14.88    0:00:09.10   1149K    1494K     0     0     0     0',
+             '02.07.54 JOB07186  - DELONERR          IDCAMS   FLUSH       0K    0:00:00.00    0:00:00.00       0        0     0     0     0     0',
+             '02.07.54 JOB07186  - FAILNOTE          BPXBATCH FLUSH       0K    0:00:00.00    0:00:00.00       0        0     0     0     0     0',
+             '02.07.55 JOB07186  - SUCCNOTE          BPXBATCH    00     168K    0:00:00.03    0:00:00.74     185      507     0     0     0     0',
+             '02.07.55 JOB07186  IEF404I TESTJOB1 - ENDED - TIME=02.07.55',
+             '02.07.55 JOB07186  - ==============================================================================================================',
+             '02.07.55 JOB07186  - NAME-                     TOTALS: CPU TIME=   0:01:14.95  ELAPSED TIME=   0:00:10.73 SERVICE UNITS=  1495K',
+             '02.07.55 JOB07186  - ==============================================================================================================',
+             '02.07.55 JOB07186  $HASP395 TESTJOB1 ENDED - RC=0008',
+            '0------ JES2 JOB STATISTICS ------',
+            '-  12 JUL 2019 JOB EXECUTION DATE',
+            '-           90 CARDS READ',
+            '-          833 SYSOUT PRINT RECORDS',
+            '-            0 SYSOUT PUNCH RECORDS',
+            '-           61 SYSOUT SPOOL KBYTES',
+            '-         0.17 MINUTES EXECUTION TIME',
+        ];
     });
 
     it('can upload to remote dataset', function() {
@@ -346,6 +376,21 @@ describe('Test cases for z/OS node accessor', function() {
             expect(jobList.length).to.be.above(1);
         }).finally(function () {
             stub && stub.restore();
+        });
+    });
+
+    it('can read correct RC code from JESMSGLG', function() {
+        if(!TEST_ZOS) {
+            var listStub = sinon.stub(client.client, 'list').callsArgWith(1, null, jobStatusResp.split('\n'));
+            var bufferStream = new stream.PassThrough();
+            bufferStream.end(new Buffer(rawJCLMSGLG.join('\n')));
+            var getStub = sinon.stub(client.client, 'get').callsArgWith(1, null, bufferStream);
+        }
+        return client.getRCFromJESMSGLG({jobName: 'jobName', jobId: 'jobId'}).then(function (rc) {
+            expect(rc).to.be.equal(8);
+        }).finally(function () {
+            listStub && listStub.restore();
+            getStub && getStub.restore();
         });
     });
 
