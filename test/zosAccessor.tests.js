@@ -110,17 +110,17 @@ describe('Test cases for z/OS node accessor', function() {
 
         rawMemberList = [
             ' Name     VV.MM   Created       Changed      Size  Init   Mod   Id',
-            'JVBR30    01.01 2018/09/07 2018/09/07 03:52    13    13     0 VPADEV',
-            'JVBR42    01.01 2018/09/07 2018/09/07 07:41    13    13     0 VPADEV'
+            'JVBR30    01.01 2018/09/07 2018/09/07 03:52    13    13     0 USER',
+            'JVBR42    01.01 2018/09/07 2018/09/07 07:41    13    13     0 USER'
         ];
 
         rawJobList = [
             'JOBNAME  JOBID    OWNER    STATUS CLASS',
             'HISCONVT JOB17459 MIAOCX   OUTPUT A        RC=0000 6 spool files',
             'HISCONVT JOB17462 MIAOCX   ACTIVE A',
-            'EZA2284I JOB00083 USER1 OUTPUT A ABEND=806 3 spool files',
-            'EZA2284I JOB00082 USER1 OUTPUT A (JCL error) 3 spool files',
-            'EZA2284I JOB00093 USER1 INPUT A -HELD-',
+            'EZA2284I JOB00083 USER1    OUTPUT A ABEND=806 3 spool files',
+            'EZA2284I JOB00082 USER1    OUTPUT A (JCL error) 3 spool files',
+            'EZA2284I JOB00093 USER1    INPUT  A -HELD-',
             'HISCONVT JOB17463 MIAOCX   held'
         ];
 
@@ -261,7 +261,7 @@ describe('Test cases for z/OS node accessor', function() {
     var submittedJobId,
         jobStatusResp = '' +
         'JOBNAME  JOBID    OWNER    STATUS CLASS\n' +
-        'UTHELLO JOB12345 VPADEV   OUTPUT A        RC=0000\n' +
+        'UTHELLO JOB12345  USER     OUTPUT A        RC=0000\n' +
         '--------\n' +
         '         ID  STEPNAME PROCSTEP C DDNAME   BYTE-COUNT \n' +
         '         001 JES2              K JESMSGLG      1206 \n' +
@@ -270,6 +270,25 @@ describe('Test cases for z/OS node accessor', function() {
         '         004 JAVA     JAVAJVM  K SYSOUT         801 \n' +
         '         005 JAVA     JAVAJVM  K STDOUT       22258 \n' +
         '5 spool files ';
+
+    var jobStatusOfAbend = '' +
+        'JOBNAME  JOBID    OWNER    STATUS CLASS\n' +
+        'HELLO    TSU18242 USER     OUTPUT TSU      ABEND=622 \n' +
+        '--------\n' +
+        '         ID  STEPNAME PROCSTEP C DDNAME   BYTE-COUNT  \n' +
+        '         001 PROC01   PROC01   B SYS00010       192 \n' +
+        '1 spool files ';
+
+    var jobStatusOfJCLError = '' +
+        'JOBNAME  JOBID    OWNER    STATUS CLASS\n' +
+        'HELLO    JOB00256 USER     OUTPUT A        (JCL error) \n' +
+        '--------\n' +
+        '         ID  STEPNAME PROCSTEP C DDNAME   BYTE-COUNT  \n' +
+        '         001 JES2        N/A   A JESMSGLG      1590 \n' +
+        '         002 JES2        N/A   A JESJCL         627 \n' +
+        '         003 JES2        N/A   A JESYSMSG      1188 \n' +
+        '3 spool files ';
+
     it('can submit JCL', function() {
         if(!TEST_ZOS) {
             var stub = sinon.stub(client.client, 'put', function (jcl, path, cb) {
@@ -288,7 +307,7 @@ describe('Test cases for z/OS node accessor', function() {
         });
     });
 
-    it('can get job status', function(done) {
+    it('can get job status of RC=0', function(done) {
         if(!TEST_ZOS) {
             var listStub = sinon.stub(client.client, 'list').callsArgWith(1, null, jobStatusResp.split('\n'));
         }
@@ -298,6 +317,44 @@ describe('Test cases for z/OS node accessor', function() {
                 expect(status.spoolFiles.length).to.be.above(0);
                 expect(status.rc).to.be.equal(0);
                 expect(status.jobid).to.equal(submittedJobId);
+                done();
+            }).catch(function(err) {
+                done(err);
+            }).finally(function () {
+                listStub && listStub.restore();
+            })
+        }, TEST_ZOS ? 5000 : 0);
+    });
+
+    it('can get job status of RC=ABEND', function(done) {
+        if(!TEST_ZOS) {
+            var listStub = sinon.stub(client.client, 'list').callsArgWith(1, null, jobStatusOfAbend.split('\n'));
+        }
+        // Add a delay here so the submitted job can be queried
+        setTimeout(function() {
+            client.getJobStatus('TSU18242').then(function (status) {
+                expect(status.spoolFiles.length).to.be.above(0);
+                expect(status.rc).to.be.equal('ABEND=622');
+                expect(status.jobid).to.equal('TSU18242');
+                done();
+            }).catch(function(err) {
+                done(err);
+            }).finally(function () {
+                listStub && listStub.restore();
+            })
+        }, TEST_ZOS ? 5000 : 0);
+    });
+
+    it('can get job status of RC=JCL Error', function(done) {
+        if(!TEST_ZOS) {
+            var listStub = sinon.stub(client.client, 'list').callsArgWith(1, null, jobStatusOfJCLError.split('\n'));
+        }
+        // Add a delay here so the submitted job can be queried
+        setTimeout(function() {
+            client.getJobStatus('JOB00256').then(function (status) {
+                expect(status.spoolFiles.length).to.be.above(0);
+                expect(status.rc).to.be.equal('(JCL error)');
+                expect(status.jobid).to.equal('JOB00256');
                 done();
             }).catch(function(err) {
                 done(err);
