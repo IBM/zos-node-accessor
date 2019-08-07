@@ -10,6 +10,8 @@ to avoid transferring user account/password in clear-text over network. IBM
 SDK for Node.js - z/OS is available at 
 [https://developer.ibm.com/mainframe/products/ibm-sdk-for-node-js-z-os/](https://developer.ibm.com/mainframe/products/ibm-sdk-for-node-js-z-os/).
 
+For a [Zowe CLI](https://github.com/zowe/zowe-cli) plugin based on this functionality, see https://github.com/zowe/zowe-cli-ftp-plugin
+
 ## Installation & Test
 
 ```bash
