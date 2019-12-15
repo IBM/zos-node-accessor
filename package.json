@@ -1,6 +1,6 @@
 {
   "name": "zos-node-accessor",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Accessing z/OS dataset and interacting with JES in NodeJS way",
   "main": "./lib/zosAccessor",
   "scripts": {
@@ -19,12 +19,12 @@
   ],
   "dependencies": {
     "debug": "~2.6.8",
-    "ftp": "~0.3.8",
+    "ftp4": "~0.3.11",
     "q": "~1.4.1"
   },
   "devDependencies": {
     "chai": "~3.5.0",
-    "mocha": "~3.2.0",
+    "mocha": "^6.2.2",
     "sinon": "~1.17.7"
   },
   "engines": {
