@@ -91,12 +91,12 @@ c.connect({user: 'myname', password:'mypassword'})
 
 #### Allocate
 
-`allocateDataset(datasetName, allocateParams)` - Allocate dataset.
+`allocateDataset(datasetName, allocateParams)` - Allocate sequential or partition (with the DCB attribut "DSORG=PO") dataset.
 
 ##### Parameter
 
 * datasetName - _string_ -  Dataset name to allocate.
-* allocateParams - _object | string_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}.
+* allocateParams - _object | string_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}. The tested attributes includes BLKsize/BLOCKSize, Directory, DSORG, LRecl, PDSTYPE, PRImary, RECfm, SECondary, and TRacks.
 
 Option Key | Description
 ---- | ---
@@ -128,6 +128,16 @@ A promise that resolves on success, rejects on error.
 
 ```js
 connection.allocateDataset('ABC.DEF', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320})
+  .then(function() {
+    console.log('Success');
+  })
+  .catch(function(err) {
+    // handle error
+  });
+```
+
+```js
+connection.allocateDataset('ABC.PDS', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320, 'DSORG': 'PO', 'DIRECTORY': 20})
   .then(function() {
     console.log('Success');
   })
@@ -189,7 +199,7 @@ connection.listDataset('/u/user1/')
 * input - _any_ -  A [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams), a [Buffer](https://nodejs.org/api/buffer.html), or a path to a local file that needs uploading.
 * destDataset - _string_ -  Dataset name to used to store the uploaded file, if it starts with `/` this file will be uploaded to USS.
 * dataType - _string (default: ascii)_ -  Transfer data type, it should be 'ascii' or 'binary', **when transfering 'ascii' files, the end-of-line sequence of input should always be `\r\n`**, otherwise the transfered file will get truncated.
-* allocateParams - _object | string_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}.
+* allocateParams - _object | string_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}. The tested attributes: BLKsize/BLOCKSize, LRecl, RECfm, PRImary, SECondary, TRacks.
 
 ##### Return
 
@@ -201,6 +211,18 @@ A promise that resolves on success, rejects on error.
 var fs = require('fs');
 var input = fs.readFileSync('/etc/hosts', 'utf8').replace(/\r?\n/g, '\r\n');
 connection.uploadDataset(input, 'hosts')
+  .then(function() {
+    console.log('Success');
+  })
+  .catch(function(err) {
+    // handle error
+  });
+```
+
+```js
+var fs = require('fs');
+var input = fs.readFileSync('/etc/hosts', 'utf8').replace(/\r?\n/g, '\r\n');
+connection.uploadDataset(input, 'HLQ.HOSTS', "LRECL=80 RECFM=FB")
   .then(function() {
     console.log('Success');
   })
