@@ -21,11 +21,14 @@ var Client = require('../lib/zosAccessor');
 var MAX_QUERIES = 10;           // Query 10 times at most
 var QUERY_INTERVAL = 2000;      // 2 seconds
 
-var settingsFile = 'customSettings.json';
-if (!fs.existsSync(path.join(__dirname, settingsFile))) {
-    settingsFile = 'defaultSettings.json';
+var settingsFilePath = '/build/zos-node-accessor/customSettings.json'; // For running on Jenkins server
+if (!fs.existsSync(settingsFilePath)) {
+    settingsFilePath = path.join(__dirname, 'customSettings.json');
+    if (!fs.existsSync(settingsFilePath)) {
+        throw new Error('The settings file, customSettings.json, is not found.');
+    }
 }
-var settings = JSON.parse(fs.readFileSync(path.join(__dirname, settingsFile)));
+var settings = JSON.parse(settingsFilePath);
 
 var USERNAME = settings.username;
 var PASSWD = settings.password;
