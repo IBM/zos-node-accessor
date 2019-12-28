@@ -42,10 +42,10 @@ var PORT = settings.port;
  * 2) Delete <USERNAME>.NODEACC.TT2
  */
 describe('Integration test cases for z/OS node accessor', function() {
-    this.timeout(60000);
+    jest.setTimeout(60000);
     var _client;
 
-    before('should connect successfully', function() {
+    beforeEach(function() {
         var client = new Client();
         return client.connect({user: USERNAME, password: PASSWD, host: HOST, port: PORT})
             .then(function (client) {
@@ -61,6 +61,12 @@ describe('Integration test cases for z/OS node accessor', function() {
             .catch(function (err) {
                 console.log(err);
             });
+    });
+
+    afterEach(function() {
+        if (_client) {
+            _client.close();
+        }
     });
 
     function allocateDataset(dsn, done) {
@@ -207,7 +213,6 @@ describe('Integration test cases for z/OS node accessor', function() {
 
     it('can get MVS dataset in ASCII mode as STREAM', function(done) {
         var text = 'HELLO                                                                   00000100\r\n';
-
         _client.getDataset(getDSN('NODEACC.HELLO'), 'ascii', true)
             .then(function(stream) {
                 var chunks = [];
@@ -216,11 +221,11 @@ describe('Integration test cases for z/OS node accessor', function() {
                 });
                 stream.on('end', function () {
                     var buffer = Buffer.concat(chunks);
-                    done();
                     expect(buffer.toString()).to.be.equal(text);
+                    done();
                 });
                 stream.on('error', function (err) {
-                    deferred.reject(err);
+                    done(err);
                 });
                 stream.resume();
             }).catch(function(err) {
@@ -275,8 +280,8 @@ describe('Integration test cases for z/OS node accessor', function() {
                 });
                 stream.on('end', function () {
                     var buffer = Buffer.concat(chunks);
-                    done();
                     expect(buffer.toString()).to.be.equal(text);
+                    done();
                 });
                 stream.on('error', function (err) {
                     deferred.reject(err);

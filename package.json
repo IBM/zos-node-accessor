@@ -4,8 +4,8 @@
   "description": "Accessing z/OS dataset and interacting with JES in NodeJS way",
   "main": "./lib/zosAccessor",
   "scripts": {
-    "test": "mocha test/zosAccessor.tests.js test/objectParameter.tests.js",
-    "test:system": "mocha test/zos.tests.js"
+    "test": "jest test/zosAccessor.tests.js test/objectParameter.tests.js",
+    "test:system": "jest test/zos.tests.js"
   },
   "repository": {
     "type": "git",
@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "chai": "~3.5.0",
-    "mocha": "^6.2.2",
+    "jest": "^24.9.0",
     "sinon": "~1.17.7"
   },
   "engines": {

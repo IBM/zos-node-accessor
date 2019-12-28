@@ -26,7 +26,7 @@ var PORT = process.env.ZOS_FTP_PORT;
 var TEST_ZOS = !!HOST;
 
 if(!TEST_ZOS) {
-    console.error('Using a mocked z/OS FTP server');
+    console.info('Using a mocked z/OS FTP server');
 }
 
 var rawJobList = [

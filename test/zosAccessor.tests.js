@@ -24,17 +24,16 @@ var PORT = process.env.ZOS_FTP_PORT;
 var TEST_ZOS = !!HOST;
 
 if(!TEST_ZOS) {
-    console.error('Using a mocked z/OS FTP server');
+    console.info('Using a mocked z/OS FTP server');
 }
 
 var rawDatasetList, rawMemberList, rawUSSList, rawJobList;
 
 describe('Test cases for z/OS node accessor', function() {
-    this.timeout(15000);
     var client;
     var uploadDSN = 'DELETE.ME';
 
-    before('should connect successfully', function() {
+    beforeEach(function() {
         client = new Client();
         if(!TEST_ZOS) {
             sinon.stub(client.client, 'connect');
@@ -49,7 +48,7 @@ describe('Test cases for z/OS node accessor', function() {
         return client.connect({user: USERNAME, password: PASSWD, host: HOST});
     });
 
-    beforeEach('set fixture values', function () {
+    beforeEach(function () {
         rawUSSList = [
             'total 554',
             'lrwxrwxrwx     1 CLASGEN  GRP2611        9 Jul 13 19:13 $SYSNAME -> $SYSNAME/',
@@ -451,7 +450,7 @@ describe('Test cases for z/OS node accessor', function() {
         });
     });
 
-    after(function () {
+    afterEach(function () {
         client && client.close();
     })
 });
