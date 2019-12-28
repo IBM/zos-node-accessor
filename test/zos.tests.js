@@ -28,7 +28,7 @@ if (!fs.existsSync(settingsFilePath)) {
         throw new Error('The settings file, customSettings.json, is not found.');
     }
 }
-var settings = JSON.parse(settingsFilePath);
+var settings = JSON.parse(fs.readFileSync(settingsFilePath));
 
 var USERNAME = settings.username;
 var PASSWD = settings.password;
