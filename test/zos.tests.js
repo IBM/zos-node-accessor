@@ -15,16 +15,22 @@
 var expect = require('chai').expect;
 var fs = require('fs');
 var path = require('path');
-var sinon = require('sinon');
 var Q = require('q');
 var Client = require('../lib/zosAccessor');
 
-var USERNAME = process.env.USERNAME || 'ADCDA';
-var PASSWD = process.env.PASSWD  || 'TEST';
-var HOST = process.env.HOST || '10.1.1.2';
-
 var MAX_QUERIES = 10;           // Query 10 times at most
 var QUERY_INTERVAL = 2000;      // 2 seconds
+
+var settingsFile = 'customSettings.json';
+if (!fs.existsSync(path.join(__dirname, settingsFile))) {
+    settingsFile = 'defaultSettings.json';
+}
+var settings = JSON.parse(fs.readFileSync(path.join(__dirname, settingsFile)));
+
+var USERNAME = settings.username;
+var PASSWD = settings.password;
+var HOST = settings.host;
+var PORT = settings.port;
 
 /**
  * This integreation test suite allocates two MVS datasets, take the following actions before run it.
@@ -33,12 +39,12 @@ var QUERY_INTERVAL = 2000;      // 2 seconds
  * 2) Delete <USERNAME>.NODEACC.TT2
  */
 describe('Integration test cases for z/OS node accessor', function() {
-    this.timeout(30000);
+    this.timeout(60000);
     var _client;
 
     before('should connect successfully', function() {
         var client = new Client();
-        return client.connect({user: USERNAME, password: PASSWD, host: HOST})
+        return client.connect({user: USERNAME, password: PASSWD, host: HOST, port: PORT})
             .then(function (client) {
                 _client = client;
                 if (client.connected) {
@@ -51,27 +57,38 @@ describe('Integration test cases for z/OS node accessor', function() {
             })
             .catch(function (err) {
                 console.log(err);
-            });;
+            });
     });
 
-    it('can allocate MVS dataset T1 via JCL', function(done) {
-        var job = ALLOC(getDSNWithQuotes('NODEACC.TT1'));
-        submitJob(_client, job).then(function (result) {
+    function allocateDataset(dsn, done) {
+        var job = ALLOC(dsn);
+        submitJob(_client, job)
+            .then(function (result) {
             done();
             expect(result.rc).to.be.equal(Client.RC_SUCCESS);
         }).catch(function(err) {
             done(err);
         });
+    }
+
+    it('can allocate MVS dataset T1 via JCL', function(done) {
+        var dsn = getDSNWithQuotes('NODEACC.TT1');
+        _client.deleteDataset(dsn)
+            .then(function () {
+                allocateDataset(dsn, done);
+            }).catch(function(err) {
+                allocateDataset(dsn, done);
+            });
     });
 
     it('can allocate MVS dataset T2 via JCL', function(done) {
-        var job = ALLOC(getDSNWithQuotes('NODEACC.TT2'));
-        submitJob(_client, job).then(function (result) {
-            done();
-            expect(result.rc).to.be.equal(Client.RC_SUCCESS);
-        }).catch(function(err) {
-            done(err);
-        });
+        var dsn = getDSNWithQuotes('NODEACC.TT2');
+        _client.deleteDataset(dsn)
+            .then(function () {
+                allocateDataset(dsn, done);
+            }).catch(function(err) {
+                allocateDataset(dsn, done);
+            });
     });
 
     it('can list MVS dataset T1 and T2 with TT*', function(done) {
@@ -130,8 +147,9 @@ describe('Integration test cases for z/OS node accessor', function() {
             });
     });
 
+    // The file "/u/adcda/nodeacc/hello.txt" is required on USS.
     it('can list USS files', function(done) {
-        _client.listDataset('/u/liangqi/nodeacc/')
+        _client.listDataset('/u/adcda/nodeacc/')
             .then(function (list) {
                 var t1 = false;
                 for(var i=0; i<list.length; ++i) {
@@ -147,6 +165,7 @@ describe('Integration test cases for z/OS node accessor', function() {
             });
     });    
 
+    // The dataset "ADCDA.NODEACC.HELLO" is required on MVS.
     it('can get MVS dataset in ASCII mode', function(done) {
         var text = 'HELLO                                                                   00000100\r\n';
 
@@ -200,6 +219,7 @@ describe('Integration test cases for z/OS node accessor', function() {
                 stream.on('error', function (err) {
                     deferred.reject(err);
                 });
+                stream.resume();
             }).catch(function(err) {
                 done(err);
             });
@@ -208,7 +228,7 @@ describe('Integration test cases for z/OS node accessor', function() {
     it('can get USS file in ASCII mode', function(done) {
         var text = 'Hello\r\n';
 
-        _client.getDataset('/u/liangqi/nodeacc/hello.txt', 'ascii')
+        _client.getDataset('/u/adcda/nodeacc/hello.txt', 'ascii')
             .then(function(buffer) {
                 expect(buffer.toString()).to.be.equal(text);
                 done();
@@ -220,7 +240,7 @@ describe('Integration test cases for z/OS node accessor', function() {
     it('can get USS file in BINARY mode', function(done) {
         var text = 'c88593939615';
 
-        _client.getDataset('/u/liangqi/nodeacc/hello.txt', 'binary')
+        _client.getDataset('/u/adcda/nodeacc/hello.txt', 'binary')
             .then(function(buffer) {
                 expect(buffer.toString('hex')).to.be.equal(text);
                 done();
@@ -232,7 +252,7 @@ describe('Integration test cases for z/OS node accessor', function() {
     it('can get USS file in ASCII_STRIP_EOL mode', function(done) {
         var text = 'Hello';
 
-        _client.getDataset('/u/liangqi/nodeacc/hello.txt', 'ascii_strip_eol')
+        _client.getDataset('/u/adcda/nodeacc/hello.txt', 'ascii_strip_eol')
             .then(function(buffer) {
                 expect(buffer.toString()).to.be.equal(text);
                 done();
@@ -244,7 +264,7 @@ describe('Integration test cases for z/OS node accessor', function() {
     it('can get USS file in ASCII mode as STREAM', function(done) {
         var text = 'Hello\r\n';
 
-        _client.getDataset('/u/liangqi/nodeacc/hello.txt', 'ascii', true)
+        _client.getDataset('/u/adcda/nodeacc/hello.txt', 'ascii', true)
             .then(function(stream) {
                 var chunks = [];
                 stream.on('data', function (chunk) {
@@ -258,6 +278,7 @@ describe('Integration test cases for z/OS node accessor', function() {
                 stream.on('error', function (err) {
                     deferred.reject(err);
                 });
+                stream.resume();
             }).catch(function(err) {
                 done(err);
             });
