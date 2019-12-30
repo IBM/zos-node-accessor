@@ -7,7 +7,7 @@ pipeline {
         echo "${env.JENKINS_URL}"
         sh 'pwd'
         sh 'ls -l'
-        nodejs(nodeJSInstallationName: 'Node.js v8') {
+        nodejs(nodeJSInstallationName: 'Node.JS v8') {
             sh 'npm --version'
             sh 'npm config list'
             sh 'node --version'
@@ -15,7 +15,7 @@ pipeline {
             sh 'npm test'
             sh 'npm run test:system'
         }
-        nodejs(nodeJSInstallationName: 'Node.js v10') {
+        nodejs(nodeJSInstallationName: 'Node.JS v10') {
             sh 'npm --version'
             sh 'npm config list'
             sh 'node --version'
