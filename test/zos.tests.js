@@ -12,7 +12,6 @@
 /****************************************************************************/
 
 
-var expect = require('chai').expect;
 var fs = require('fs');
 var path = require('path');
 var Q = require('q');
@@ -74,7 +73,7 @@ describe('Integration test cases for z/OS node accessor', function() {
         submitJob(_client, job)
             .then(function (result) {
             done();
-            expect(result.rc).to.be.equal(Client.RC_SUCCESS);
+            expect(result.rc).toBe(Client.RC_SUCCESS);
         }).catch(function(err) {
             done(err);
         });
@@ -115,8 +114,8 @@ describe('Integration test cases for z/OS node accessor', function() {
                     }
                 }
                 done();
-                expect(t1).to.be.true;
-                expect(t2).to.be.true;
+                expect(t1).toBeTruthy();
+                expect(t2).toBeTruthy();
             }).catch(function(err) {
                 done(err);
             });
@@ -149,8 +148,8 @@ describe('Integration test cases for z/OS node accessor', function() {
                     }
                 }
                 done();
-                expect(t1).to.be.false;
-                expect(t2).to.be.false;
+                expect(t1).toBeFalsy();
+                expect(t2).toBeFalsy();
             }).catch(function(err) {
                 done(err);
             });
@@ -168,7 +167,7 @@ describe('Integration test cases for z/OS node accessor', function() {
                     }
                 }
                 done();
-                expect(t1).to.be.true;
+                expect(t1).toBeTruthy();
             }).catch(function(err) {
                 done(err);
             });
@@ -180,7 +179,7 @@ describe('Integration test cases for z/OS node accessor', function() {
 
         _client.getDataset(getDSN('NODEACC.HELLO'), 'ascii')
             .then(function(buffer) {
-                expect(buffer.toString()).to.be.equal(text);
+                expect(buffer.toString()).toBe(text);
                 done();
             }).catch(function(err) {
                 done(err);
@@ -192,7 +191,7 @@ describe('Integration test cases for z/OS node accessor', function() {
 
         _client.getDataset(getDSN('NODEACC.HELLO'), 'ascii_strip_eol')
             .then(function(buffer) {
-                expect(buffer.toString()).to.be.equal(text);
+                expect(buffer.toString()).toBe(text);
                 done();
             }).catch(function(err) {
                 done(err);
@@ -204,7 +203,7 @@ describe('Integration test cases for z/OS node accessor', function() {
 
         _client.getDataset(getDSN('NODEACC.HELLO'), 'binary')
             .then(function(buffer) {
-                expect(buffer.toString('hex')).to.be.equal(text);
+                expect(buffer.toString('hex')).toBe(text);
                 done();
             }).catch(function(err) {
                 done(err);
@@ -221,7 +220,7 @@ describe('Integration test cases for z/OS node accessor', function() {
                 });
                 stream.on('end', function () {
                     var buffer = Buffer.concat(chunks);
-                    expect(buffer.toString()).to.be.equal(text);
+                    expect(buffer.toString()).toBe(text);
                     done();
                 });
                 stream.on('error', function (err) {
@@ -238,7 +237,7 @@ describe('Integration test cases for z/OS node accessor', function() {
 
         _client.getDataset('/u/adcda/nodeacc/hello.txt', 'ascii')
             .then(function(buffer) {
-                expect(buffer.toString()).to.be.equal(text);
+                expect(buffer.toString()).toBe(text);
                 done();
             }).catch(function(err) {
                 done(err);
@@ -250,7 +249,7 @@ describe('Integration test cases for z/OS node accessor', function() {
 
         _client.getDataset('/u/adcda/nodeacc/hello.txt', 'binary')
             .then(function(buffer) {
-                expect(buffer.toString('hex')).to.be.equal(text);
+                expect(buffer.toString('hex')).toBe(text);
                 done();
             }).catch(function(err) {
                 done(err);
@@ -262,7 +261,7 @@ describe('Integration test cases for z/OS node accessor', function() {
 
         _client.getDataset('/u/adcda/nodeacc/hello.txt', 'ascii_strip_eol')
             .then(function(buffer) {
-                expect(buffer.toString()).to.be.equal(text);
+                expect(buffer.toString()).toBe(text);
                 done();
             }).catch(function(err) {
                 done(err);
@@ -280,7 +279,7 @@ describe('Integration test cases for z/OS node accessor', function() {
                 });
                 stream.on('end', function () {
                     var buffer = Buffer.concat(chunks);
-                    expect(buffer.toString()).to.be.equal(text);
+                    expect(buffer.toString()).toBe(text);
                     done();
                 });
                 stream.on('error', function (err) {
