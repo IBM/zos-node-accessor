@@ -12,19 +12,27 @@
 /****************************************************************************/
 
 
-var expect = require('chai').expect;
 var fs = require('fs');
 var path = require('path');
-var sinon = require('sinon');
 var Q = require('q');
 var Client = require('../lib/zosAccessor');
 
-var USERNAME = process.env.USERNAME || 'ADCDA';
-var PASSWD = process.env.PASSWD  || 'TEST';
-var HOST = process.env.HOST || '10.1.1.2';
-
 var MAX_QUERIES = 10;           // Query 10 times at most
 var QUERY_INTERVAL = 2000;      // 2 seconds
+
+var settingsFilePath = '/build/zos-node-accessor/customSettings.json'; // For running on Jenkins server
+if (!fs.existsSync(settingsFilePath)) {
+    settingsFilePath = path.join(__dirname, 'customSettings.json');
+    if (!fs.existsSync(settingsFilePath)) {
+        throw new Error('The settings file, customSettings.json, is not found.');
+    }
+}
+var settings = JSON.parse(fs.readFileSync(settingsFilePath));
+
+var USERNAME = settings.username.toUpperCase();
+var PASSWD = settings.password;
+var HOST = settings.host;
+var PORT = settings.port;
 
 /**
  * This integreation test suite allocates two MVS datasets, take the following actions before run it.
@@ -33,12 +41,12 @@ var QUERY_INTERVAL = 2000;      // 2 seconds
  * 2) Delete <USERNAME>.NODEACC.TT2
  */
 describe('Integration test cases for z/OS node accessor', function() {
-    this.timeout(30000);
+    jest.setTimeout(60000);
     var _client;
 
-    before('should connect successfully', function() {
+    beforeEach(function() {
         var client = new Client();
-        return client.connect({user: USERNAME, password: PASSWD, host: HOST})
+        return client.connect({user: USERNAME, password: PASSWD, host: HOST, port: PORT})
             .then(function (client) {
                 _client = client;
                 if (client.connected) {
@@ -51,27 +59,44 @@ describe('Integration test cases for z/OS node accessor', function() {
             })
             .catch(function (err) {
                 console.log(err);
-            });;
+            });
     });
 
-    it('can allocate MVS dataset T1 via JCL', function(done) {
-        var job = ALLOC(getDSNWithQuotes('NODEACC.TT1'));
-        submitJob(_client, job).then(function (result) {
+    afterEach(function() {
+        if (_client) {
+            _client.close();
+        }
+    });
+
+    function allocateDataset(dsn, done) {
+        var job = ALLOC(dsn);
+        submitJob(_client, job)
+            .then(function (result) {
             done();
-            expect(result.rc).to.be.equal(Client.RC_SUCCESS);
+            expect(result.rc).toBe(Client.RC_SUCCESS);
         }).catch(function(err) {
             done(err);
         });
+    }
+
+    it('can allocate MVS dataset T1 via JCL', function(done) {
+        var dsn = getDSNWithQuotes('NODEACC.TT1');
+        _client.deleteDataset(dsn)
+            .then(function () {
+                allocateDataset(dsn, done);
+            }).catch(function(err) {
+                allocateDataset(dsn, done);
+            });
     });
 
     it('can allocate MVS dataset T2 via JCL', function(done) {
-        var job = ALLOC(getDSNWithQuotes('NODEACC.TT2'));
-        submitJob(_client, job).then(function (result) {
-            done();
-            expect(result.rc).to.be.equal(Client.RC_SUCCESS);
-        }).catch(function(err) {
-            done(err);
-        });
+        var dsn = getDSNWithQuotes('NODEACC.TT2');
+        _client.deleteDataset(dsn)
+            .then(function () {
+                allocateDataset(dsn, done);
+            }).catch(function(err) {
+                allocateDataset(dsn, done);
+            });
     });
 
     it('can list MVS dataset T1 and T2 with TT*', function(done) {
@@ -89,8 +114,8 @@ describe('Integration test cases for z/OS node accessor', function() {
                     }
                 }
                 done();
-                expect(t1).to.be.true;
-                expect(t2).to.be.true;
+                expect(t1).toBeTruthy();
+                expect(t2).toBeTruthy();
             }).catch(function(err) {
                 done(err);
             });
@@ -123,15 +148,16 @@ describe('Integration test cases for z/OS node accessor', function() {
                     }
                 }
                 done();
-                expect(t1).to.be.false;
-                expect(t2).to.be.false;
+                expect(t1).toBeFalsy();
+                expect(t2).toBeFalsy();
             }).catch(function(err) {
                 done(err);
             });
     });
 
+    // The file "/u/<username>/nodeacc/hello.txt" is required on USS.
     it('can list USS files', function(done) {
-        _client.listDataset('/u/liangqi/nodeacc/')
+        _client.listDataset(getUSSPath('nodeacc/'))
             .then(function (list) {
                 var t1 = false;
                 for(var i=0; i<list.length; ++i) {
@@ -141,18 +167,19 @@ describe('Integration test cases for z/OS node accessor', function() {
                     }
                 }
                 done();
-                expect(t1).to.be.true;
+                expect(t1).toBeTruthy();
             }).catch(function(err) {
                 done(err);
             });
     });    
 
+    // The dataset "<USERNAME>.NODEACC.HELLO" is required on MVS.
     it('can get MVS dataset in ASCII mode', function(done) {
         var text = 'HELLO                                                                   00000100\r\n';
 
         _client.getDataset(getDSN('NODEACC.HELLO'), 'ascii')
             .then(function(buffer) {
-                expect(buffer.toString()).to.be.equal(text);
+                expect(buffer.toString()).toBe(text);
                 done();
             }).catch(function(err) {
                 done(err);
@@ -164,7 +191,7 @@ describe('Integration test cases for z/OS node accessor', function() {
 
         _client.getDataset(getDSN('NODEACC.HELLO'), 'ascii_strip_eol')
             .then(function(buffer) {
-                expect(buffer.toString()).to.be.equal(text);
+                expect(buffer.toString()).toBe(text);
                 done();
             }).catch(function(err) {
                 done(err);
@@ -176,7 +203,7 @@ describe('Integration test cases for z/OS node accessor', function() {
 
         _client.getDataset(getDSN('NODEACC.HELLO'), 'binary')
             .then(function(buffer) {
-                expect(buffer.toString('hex')).to.be.equal(text);
+                expect(buffer.toString('hex')).toBe(text);
                 done();
             }).catch(function(err) {
                 done(err);
@@ -185,7 +212,6 @@ describe('Integration test cases for z/OS node accessor', function() {
 
     it('can get MVS dataset in ASCII mode as STREAM', function(done) {
         var text = 'HELLO                                                                   00000100\r\n';
-
         _client.getDataset(getDSN('NODEACC.HELLO'), 'ascii', true)
             .then(function(stream) {
                 var chunks = [];
@@ -194,12 +220,13 @@ describe('Integration test cases for z/OS node accessor', function() {
                 });
                 stream.on('end', function () {
                     var buffer = Buffer.concat(chunks);
+                    expect(buffer.toString()).toBe(text);
                     done();
-                    expect(buffer.toString()).to.be.equal(text);
                 });
                 stream.on('error', function (err) {
-                    deferred.reject(err);
+                    done(err);
                 });
+                stream.resume();
             }).catch(function(err) {
                 done(err);
             });
@@ -208,9 +235,9 @@ describe('Integration test cases for z/OS node accessor', function() {
     it('can get USS file in ASCII mode', function(done) {
         var text = 'Hello\r\n';
 
-        _client.getDataset('/u/liangqi/nodeacc/hello.txt', 'ascii')
+        _client.getDataset(getUSSPath('nodeacc/hello.txt'), 'ascii')
             .then(function(buffer) {
-                expect(buffer.toString()).to.be.equal(text);
+                expect(buffer.toString()).toBe(text);
                 done();
             }).catch(function(err) {
                 done(err);
@@ -220,9 +247,9 @@ describe('Integration test cases for z/OS node accessor', function() {
     it('can get USS file in BINARY mode', function(done) {
         var text = 'c88593939615';
 
-        _client.getDataset('/u/liangqi/nodeacc/hello.txt', 'binary')
+        _client.getDataset(getUSSPath('nodeacc/hello.txt'), 'binary')
             .then(function(buffer) {
-                expect(buffer.toString('hex')).to.be.equal(text);
+                expect(buffer.toString('hex')).toBe(text);
                 done();
             }).catch(function(err) {
                 done(err);
@@ -232,9 +259,9 @@ describe('Integration test cases for z/OS node accessor', function() {
     it('can get USS file in ASCII_STRIP_EOL mode', function(done) {
         var text = 'Hello';
 
-        _client.getDataset('/u/liangqi/nodeacc/hello.txt', 'ascii_strip_eol')
+        _client.getDataset(getUSSPath('nodeacc/hello.txt'), 'ascii_strip_eol')
             .then(function(buffer) {
-                expect(buffer.toString()).to.be.equal(text);
+                expect(buffer.toString()).toBe(text);
                 done();
             }).catch(function(err) {
                 done(err);
@@ -244,7 +271,7 @@ describe('Integration test cases for z/OS node accessor', function() {
     it('can get USS file in ASCII mode as STREAM', function(done) {
         var text = 'Hello\r\n';
 
-        _client.getDataset('/u/liangqi/nodeacc/hello.txt', 'ascii', true)
+        _client.getDataset(getUSSPath('nodeacc/hello.txt'), 'ascii', true)
             .then(function(stream) {
                 var chunks = [];
                 stream.on('data', function (chunk) {
@@ -252,17 +279,22 @@ describe('Integration test cases for z/OS node accessor', function() {
                 });
                 stream.on('end', function () {
                     var buffer = Buffer.concat(chunks);
+                    expect(buffer.toString()).toBe(text);
                     done();
-                    expect(buffer.toString()).to.be.equal(text);
                 });
                 stream.on('error', function (err) {
                     deferred.reject(err);
                 });
+                stream.resume();
             }).catch(function(err) {
                 done(err);
             });
     });
 
+    function getUSSPath(path) {
+        return `/u/${USERNAME.toLowerCase()}/${path}`;
+    }
+    
     function getDSN(name) {
         return USERNAME.toUpperCase() + '.' + name;
     }

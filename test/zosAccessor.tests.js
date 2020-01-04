@@ -11,7 +11,6 @@
 /*                                                                          */
 /****************************************************************************/
 
-var expect = require('chai').expect;
 var sinon = require('sinon');
 var stream = require('stream');
 var Q = require('q');
@@ -24,17 +23,16 @@ var PORT = process.env.ZOS_FTP_PORT;
 var TEST_ZOS = !!HOST;
 
 if(!TEST_ZOS) {
-    console.error('Using a mocked z/OS FTP server');
+    console.info('Using a mocked z/OS FTP server');
 }
 
 var rawDatasetList, rawMemberList, rawUSSList, rawJobList;
 
 describe('Test cases for z/OS node accessor', function() {
-    this.timeout(15000);
     var client;
     var uploadDSN = 'DELETE.ME';
 
-    before('should connect successfully', function() {
+    beforeEach(function() {
         client = new Client();
         if(!TEST_ZOS) {
             sinon.stub(client.client, 'connect');
@@ -49,7 +47,7 @@ describe('Test cases for z/OS node accessor', function() {
         return client.connect({user: USERNAME, password: PASSWD, host: HOST});
     });
 
-    beforeEach('set fixture values', function () {
+    beforeEach(function () {
         rawUSSList = [
             'total 554',
             'lrwxrwxrwx     1 CLASGEN  GRP2611        9 Jul 13 19:13 $SYSNAME -> $SYSNAME/',
@@ -169,8 +167,7 @@ describe('Test cases for z/OS node accessor', function() {
             var stub = sinon.stub(client.client, 'list').callsArgWith(1, null, rawUSSList);
         }
         return client.listDataset('/').then(function (list) {
-            expect(list).to.be.an('array');
-            expect(list.length).to.be.above(1);
+            expect(list.length).toBeGreaterThan(1);
         }).finally(function () {
             stub && stub.restore();
         });
@@ -181,8 +178,7 @@ describe('Test cases for z/OS node accessor', function() {
             var stub = sinon.stub(client.client, 'list').callsArgWith(1, null, rawDatasetList);
         }
         return client.listDataset(USERNAME+'.*').then(function (list) {
-            expect(list).to.be.an('array');
-            expect(list.length).to.be.above(1);
+            expect(list.length).toBeGreaterThan(1);
             var foundUploaded = false;
             for(var i=0; i<list.length; ++i) {
                 var entry = list[i];
@@ -191,7 +187,7 @@ describe('Test cases for z/OS node accessor', function() {
                     foundUploaded = true;
                 }
             }
-            expect(foundUploaded).to.be.true;
+            expect(foundUploaded).toBeTruthy();
         }).finally(function () {
             stub && stub.restore();
         });
@@ -199,17 +195,15 @@ describe('Test cases for z/OS node accessor', function() {
 
     it('can parse MVS data set list correctly', function() {
         var datasetList = client.parseMVSDataSets(rawDatasetList);
-        expect(datasetList).to.be.an('array');
-        expect(datasetList.length).to.be.equal(45);
+        expect(datasetList.length).toBe(45);
         expect(datasetList.filter(function(e){return e.hasOwnProperty('Ext')}).length)
-            .to.be.equal(44);
+            .toBe(44);
     });
 
     it('can parse PDS member list correctly', function() {
         var datasetList = client.parsePDSMembers(rawMemberList);
-        expect(datasetList).to.be.an('array');
-        expect(datasetList.length).to.be.equal(2);
-        expect(datasetList[0]['Changed']).to.be.equal('2018/09/07 03:52');
+        expect(datasetList.length).toBe(2);
+        expect(datasetList[0]['Changed']).toBe('2018/09/07 03:52');
     });
 
     it('can parse MVS data set list without space padding correctly', function() {
@@ -221,19 +215,19 @@ describe('Test cases for z/OS node accessor', function() {
             'XRFS67 3390   2017/08/04  314760  FB    1024 27648  PS  \'USERHLQI.T4.HISPAXZ\''
         ];
         var datasetList = client.parseMVSDataSets(rawDatasetList);
-        expect(datasetList).to.be.an('array');
-        expect(datasetList.length).to.be.equal(4);
+        expect(typeof datasetList).toBe('object');
+        expect(datasetList.length).toBe(4);
 
         // Verify whether Ext can be separated from Used
-        expect(datasetList[1]['Volume']).to.be.equal('XRFS95');
-        expect(datasetList[1]['Unit']).to.be.equal('3390');
-        expect(datasetList[1]['Ext']).to.be.equal('3');
-        expect(datasetList[1]['Used']).to.be.equal('13875');
-        expect(datasetList[1]['Recfm']).to.be.equal('FB');
-        expect(datasetList[1]['Lrecl']).to.be.equal('1024');
-        expect(datasetList[1]['BlkSz']).to.be.equal('27648');
-        expect(datasetList[1]['Dsorg']).to.be.equal('PS');
-        expect(datasetList[1]['Dsname']).to.be.equal('USERHLQI.T2.HISPAXZ');
+        expect(datasetList[1]['Volume']).toBe('XRFS95');
+        expect(datasetList[1]['Unit']).toBe('3390');
+        expect(datasetList[1]['Ext']).toBe('3');
+        expect(datasetList[1]['Used']).toBe('13875');
+        expect(datasetList[1]['Recfm']).toBe('FB');
+        expect(datasetList[1]['Lrecl']).toBe('1024');
+        expect(datasetList[1]['BlkSz']).toBe('27648');
+        expect(datasetList[1]['Dsorg']).toBe('PS');
+        expect(datasetList[1]['Dsname']).toBe('USERHLQI.T2.HISPAXZ');
 
 
     });
@@ -301,7 +295,7 @@ describe('Test cases for z/OS node accessor', function() {
         return client.submitJCL(helloJCL).then(function (jobId) {
             submittedJobId = jobId;
             jobStatusResp = jobStatusResp.replace('JOB12345', submittedJobId);
-            expect(jobId).to.match(/^\w+\d+$/);
+            expect(jobId).toMatch(/^\w+\d+$/);
         }).finally(function () {
             stub && stub.restore();
         });
@@ -314,9 +308,9 @@ describe('Test cases for z/OS node accessor', function() {
         // Add a delay here so the submitted job can be queried
         setTimeout(function() {
             client.getJobStatus(submittedJobId).then(function (status) {
-                expect(status.spoolFiles.length).to.be.above(0);
-                expect(status.rc).to.be.equal(0);
-                expect(status.jobid).to.equal(submittedJobId);
+                expect(status.spoolFiles.length).toBeGreaterThan(0);
+                expect(status.rc).toBe(0);
+                expect(status.jobid).toEqual(submittedJobId);
                 done();
             }).catch(function(err) {
                 done(err);
@@ -333,9 +327,9 @@ describe('Test cases for z/OS node accessor', function() {
         // Add a delay here so the submitted job can be queried
         setTimeout(function() {
             client.getJobStatus('TSU18242').then(function (status) {
-                expect(status.spoolFiles.length).to.be.above(0);
-                expect(status.rc).to.be.equal('ABEND=622');
-                expect(status.jobid).to.equal('TSU18242');
+                expect(status.spoolFiles.length).toBeGreaterThan(0);
+                expect(status.rc).toBe('ABEND=622');
+                expect(status.jobid).toEqual('TSU18242');
                 done();
             }).catch(function(err) {
                 done(err);
@@ -352,9 +346,9 @@ describe('Test cases for z/OS node accessor', function() {
         // Add a delay here so the submitted job can be queried
         setTimeout(function() {
             client.getJobStatus('JOB00256').then(function (status) {
-                expect(status.spoolFiles.length).to.be.above(0);
-                expect(status.rc).to.be.equal('(JCL error)');
-                expect(status.jobid).to.equal('JOB00256');
+                expect(status.spoolFiles.length).toBeGreaterThan(0);
+                expect(status.rc).toBe('(JCL error)');
+                expect(status.jobid).toEqual('JOB00256');
                 done();
             }).catch(function(err) {
                 done(err);
@@ -374,17 +368,17 @@ describe('Test cases for z/OS node accessor', function() {
         // Add a delay here so the submitted job can be queried
         setTimeout(function() {
             client.getJobLog('UTHELLO', submittedJobId, 'metaInfo').then(function (log) {
-            getStub && expect(getStub.calledWith(submittedJobId+'.x')).to.be.true;
-            expect(log.length).to.be.above(0);
+            getStub && expect(getStub.calledWith(submittedJobId+'.x')).toBeTruthy();
+            expect(log.length).toBeGreaterThan(0);
             if (TEST_ZOS) {
                 expect(log[0].content).to.be.a('string');
                 expect(log[0].ddname).to.be.a('string');
                 expect(log[0].stepname).to.be.a('string');
             } else {
-                expect(log[0].content).to.equal('MINUTES EXECUTION TIME');
-                expect(log[0].ddname).to.equal('JESMSGLG');
-                expect(log[0].stepname).to.equal('JES2');
-                expect(log[0].byteCount).to.equal(1206);
+                expect(log[0].content).toEqual('MINUTES EXECUTION TIME');
+                expect(log[0].ddname).toEqual('JESMSGLG');
+                expect(log[0].stepname).toEqual('JES2');
+                expect(log[0].byteCount).toEqual(1206);
             }
             done();
         }).catch(function(err) {
@@ -400,25 +394,25 @@ describe('Test cases for z/OS node accessor', function() {
         var stub = sinon.stub(client.client, 'list').callsArgWith(0, null, rawJobList);
         return Q.all([
             client.queryJob('any_name', 'JOB17459').then(function (status) {
-                expect(status).to.be.equal(Client.RC_SUCCESS);
+                expect(status).toBe(Client.RC_SUCCESS);
             }),
             client.queryJob('any_name', 'JOB17462').then(function (status) {
-                expect(status).to.be.equal(Client.RC_ACTIVE);
+                expect(status).toBe(Client.RC_ACTIVE);
             }),
             client.queryJob('any_name', 'JOB00083').then(function (status) {
-                expect(status).to.be.equal(Client.RC_FAIL);
+                expect(status).toBe(Client.RC_FAIL);
             }),
             client.queryJob('any_name', 'JOB00082').then(function (status) {
-                expect(status).to.be.equal(Client.RC_FAIL);
+                expect(status).toBe(Client.RC_FAIL);
             }),
             client.queryJob('any_name', 'JOB00093').then(function (status) {
-                expect(status).to.be.equal(Client.RC_WAITING);
+                expect(status).toBe(Client.RC_WAITING);
             }),
             client.queryJob('any_name', 'JOB17463').then(function (status) {
-                expect(status).to.be.equal(Client.RC_FAIL);
+                expect(status).toBe(Client.RC_FAIL);
             }),
             client.queryJob('any_name', 'JOB_NON_EXIST').then(function (status) {
-                expect(status).to.be.equal(Client.RC_NOT_FOUND);
+                expect(status).toBe(Client.RC_NOT_FOUND);
             })
         ]).finally(function () {
             stub && stub.restore();
@@ -430,7 +424,7 @@ describe('Test cases for z/OS node accessor', function() {
             var stub = sinon.stub(client.client, 'list').callsArgWith(0, null, rawJobList);
         }
         return client.listJobs({jobName: '*'}).then(function (jobList) {
-            expect(jobList.length).to.be.above(1);
+            expect(jobList.length).toBeGreaterThan(1);
         }).finally(function () {
             stub && stub.restore();
         });
@@ -444,14 +438,14 @@ describe('Test cases for z/OS node accessor', function() {
             var getStub = sinon.stub(client.client, 'get').callsArgWith(1, null, bufferStream);
         }
         return client.getRCFromJESMSGLG({jobName: 'jobName', jobId: 'jobId'}).then(function (rc) {
-            expect(rc).to.be.equal(8);
+            expect(rc).toBe(8);
         }).finally(function () {
             listStub && listStub.restore();
             getStub && getStub.restore();
         });
     });
 
-    after(function () {
+    afterEach(function () {
         client && client.close();
     })
 });

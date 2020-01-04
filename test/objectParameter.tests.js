@@ -11,12 +11,8 @@
 /*                                                                          */
 /****************************************************************************/
 
-var expect = require('chai').expect;
-var fs = require('fs');
-var path = require('path');
 var sinon = require('sinon');
 var stream = require('stream');
-var Q = require('q');
 var Client = require('../lib/zosAccessor');
 
 var USERNAME = process.env.ZOS_FTP_USERNAME || 'ADCDA';
@@ -26,7 +22,7 @@ var PORT = process.env.ZOS_FTP_PORT;
 var TEST_ZOS = !!HOST;
 
 if(!TEST_ZOS) {
-    console.error('Using a mocked z/OS FTP server');
+    console.info('Using a mocked z/OS FTP server');
 }
 
 var rawJobList = [
@@ -122,7 +118,7 @@ describe('Test cases for the object parameter of', function() {
                 sinon.spy(client.queryJob(999));
                 sinon.assert.fail('Exception is not threw as expected');
             } catch(e) {
-                expect(e.message).to.eq('The first parameter type of queryJob() should be string or object.');
+                expect(e.message).toBe('The first parameter type of queryJob() should be string or object.');
             }
         });
     });
@@ -153,7 +149,7 @@ describe('Test cases for the object parameter of', function() {
                 sinon.spy(client.getJobStatus(999));
                 sinon.assert.fail('Exception is not threw as expected');
             } catch(e) {
-                expect(e.message).to.eq('The first parameter type of getJobStatus() should be string or object.');
+                expect(e.message).toBe('The first parameter type of getJobStatus() should be string or object.');
             }
         });
 
@@ -235,7 +231,7 @@ describe('Test cases for the object parameter of', function() {
                 sinon.spy(client.getJobLog(999));
                 sinon.assert.fail('Exception is not threw as expected');
             } catch(e) {
-                expect(e.message).to.eq('The first parameter type of getJobLog() should be string or object.');
+                expect(e.message).toBe('The first parameter type of getJobLog() should be string or object.');
             }
         });
 
@@ -244,7 +240,7 @@ describe('Test cases for the object parameter of', function() {
                 sinon.spy(client.getJobLog({}));
                 sinon.assert.fail('Exception is not threw as expected');
             } catch(e) {
-                expect(e.message).to.eq('The job ID is required by getJobLog().');
+                expect(e.message).toBe('The job ID is required by getJobLog().');
             }
         });
 
