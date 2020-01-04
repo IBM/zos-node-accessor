@@ -29,7 +29,7 @@ if (!fs.existsSync(settingsFilePath)) {
 }
 var settings = JSON.parse(fs.readFileSync(settingsFilePath));
 
-var USERNAME = settings.username;
+var USERNAME = settings.username.toUpperCase();
 var PASSWD = settings.password;
 var HOST = settings.host;
 var PORT = settings.port;
@@ -155,9 +155,9 @@ describe('Integration test cases for z/OS node accessor', function() {
             });
     });
 
-    // The file "/u/adcda/nodeacc/hello.txt" is required on USS.
+    // The file "/u/<username>/nodeacc/hello.txt" is required on USS.
     it('can list USS files', function(done) {
-        _client.listDataset('/u/adcda/nodeacc/')
+        _client.listDataset(getUSSPath('nodeacc/'))
             .then(function (list) {
                 var t1 = false;
                 for(var i=0; i<list.length; ++i) {
@@ -173,7 +173,7 @@ describe('Integration test cases for z/OS node accessor', function() {
             });
     });    
 
-    // The dataset "ADCDA.NODEACC.HELLO" is required on MVS.
+    // The dataset "<USERNAME>.NODEACC.HELLO" is required on MVS.
     it('can get MVS dataset in ASCII mode', function(done) {
         var text = 'HELLO                                                                   00000100\r\n';
 
@@ -235,7 +235,7 @@ describe('Integration test cases for z/OS node accessor', function() {
     it('can get USS file in ASCII mode', function(done) {
         var text = 'Hello\r\n';
 
-        _client.getDataset('/u/adcda/nodeacc/hello.txt', 'ascii')
+        _client.getDataset(getUSSPath('nodeacc/hello.txt'), 'ascii')
             .then(function(buffer) {
                 expect(buffer.toString()).toBe(text);
                 done();
@@ -247,7 +247,7 @@ describe('Integration test cases for z/OS node accessor', function() {
     it('can get USS file in BINARY mode', function(done) {
         var text = 'c88593939615';
 
-        _client.getDataset('/u/adcda/nodeacc/hello.txt', 'binary')
+        _client.getDataset(getUSSPath('nodeacc/hello.txt'), 'binary')
             .then(function(buffer) {
                 expect(buffer.toString('hex')).toBe(text);
                 done();
@@ -259,7 +259,7 @@ describe('Integration test cases for z/OS node accessor', function() {
     it('can get USS file in ASCII_STRIP_EOL mode', function(done) {
         var text = 'Hello';
 
-        _client.getDataset('/u/adcda/nodeacc/hello.txt', 'ascii_strip_eol')
+        _client.getDataset(getUSSPath('nodeacc/hello.txt'), 'ascii_strip_eol')
             .then(function(buffer) {
                 expect(buffer.toString()).toBe(text);
                 done();
@@ -271,7 +271,7 @@ describe('Integration test cases for z/OS node accessor', function() {
     it('can get USS file in ASCII mode as STREAM', function(done) {
         var text = 'Hello\r\n';
 
-        _client.getDataset('/u/adcda/nodeacc/hello.txt', 'ascii', true)
+        _client.getDataset(getUSSPath('nodeacc/hello.txt'), 'ascii', true)
             .then(function(stream) {
                 var chunks = [];
                 stream.on('data', function (chunk) {
@@ -291,6 +291,10 @@ describe('Integration test cases for z/OS node accessor', function() {
             });
     });
 
+    function getUSSPath(path) {
+        return `/u/${USERNAME.toLowerCase()}/${path}`;
+    }
+    
     function getDSN(name) {
         return USERNAME.toUpperCase() + '.' + name;
     }
