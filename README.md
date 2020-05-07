@@ -651,10 +651,10 @@ await connection.deleteJob({ jobId: 'JOB25186' });
 
 This module adopts the [Module Long Term Support (LTS)](http://github.com/CloudNativeJS/ModuleLTS) policy, with the following End Of Life (EOL) dates:
 
-| Module Version | Release Date | Minimum EOL | EOL With     | Status  |
-|----------------|--------------|-------------|--------------|---------|
-| 1.x.x	         | Oct 2018     | Dec 2019    |              | End     |
-| 2.x.x	         | May 2020     | May 2022    |              | Current |
+| Module Version | Release Date | Minimum EOL | Node Version     | EOL With | Status  |
+|----------------|--------------|-------------|------------------|----------|---------|
+| 2.x.x	         | May 2020     | May 2022    | v8, v10, v12     |          | Current |
+| 1.x.x	         | Oct 2018     | Dec 2019    | v6, v8, v10, v12 | Node v6  | EOL     |
 
 ## License
 
