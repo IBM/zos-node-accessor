@@ -2,21 +2,25 @@ module.exports = {
     "roots": [
       "./"
     ],
+    "transform": {
+        "^.+\\.ts?$": "ts-jest"
+    },
     "testEnvironment": 'node',
     "restoreMocks": true,
-    "testRegex": "(/test/.*|(\\.|/)(tests|spec))\\.js",
+    "testRegex": "(/__test__/.*|(\\.|/)(test|spec))\\.ts",
     "moduleFileExtensions": [
       "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
+      "js"
     ],
     "collectCoverage": true,
     "collectCoverageFrom": [
-      "**/*.ts"
+      "**/*.ts",
+      "!src/__unit__/**/*.ts",
+      "!src/__test__/**/*.ts"
     ],
-    "coverageDirectory": "coverage"
+    "coverageDirectory": "coverage",
+    "coveragePathIgnorePatterns": [
+        ".d.ts"
+    ]
   }
   

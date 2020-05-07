@@ -1,4 +1,7 @@
 coverage/
 node_modules/
+lib/*.js
+lib/**/*.js
 .idea/
 .vscode/
+resources/customSettings.json
