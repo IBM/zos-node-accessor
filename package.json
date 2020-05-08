@@ -2,6 +2,8 @@
   "name": "zos-node-accessor",
   "version": "2.0.0",
   "description": "Accessing z/OS dataset and interacting with JES in NodeJS way",
+  "main": "./lib/zosAccessor.js",
+  "types": "./lib/zosAccessor.d.ts",
   "scripts": {
     "start": "npm run build:live",
     "build": "tsc -p .",
@@ -41,7 +43,9 @@
   "files": [
     "./LICENSE",
     "./README.md",
-    "lib/interfaces",
+    "lib/interfaces/*.d.ts",
+    "lib/interfaces/*.js",
+    "lib/*.d.ts",
     "lib/*.js"
   ],
   "engines": {

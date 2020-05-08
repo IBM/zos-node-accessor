@@ -1,6 +1,8 @@
 coverage/
 node_modules/
+lib/*.d.ts
 lib/*.js
+lib/**/*.d.ts
 lib/**/*.js
 .idea/
 .vscode/
