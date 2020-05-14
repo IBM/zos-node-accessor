@@ -4,10 +4,10 @@
 [![Module LTS Adopted'](https://img.shields.io/badge/Module%20LTS-Adopted-brightgreen.svg?style=flat)](http://github.com/CloudNativeJS/ModuleLTS)
 [![IBM Support](https://img.shields.io/badge/Support-IBM%20Runtimes-brightgreen.svg?style=flat)](http://ibm.biz/node-support)
 
-A Node module to help Node.JS developers interacting with z/OS easily, taking 
-advantage of z/OS FTP service. It's recommended to be deployed on z/OS, 
-to avoid transferring user account/password in clear-text over network. IBM
-SDK for Node.js - z/OS is available at 
+A Node module to help Node.JS developers interacting with z/OS easily, taking advantage of z/OS FTP service. 
+If z/OS FTP service is not configured as FTP over SSL, it's recommended to be deployed on z/OS, to avoid transferring user account/password in clear-text over network. 
+Otherwise, the secure connection of FTP over SSL is recommended.
+IBM SDK for Node.js - z/OS is available at 
 [https://developer.ibm.com/mainframe/products/ibm-sdk-for-node-js-z-os/](https://developer.ibm.com/mainframe/products/ibm-sdk-for-node-js-z-os/).
 
 For a [Zowe CLI](https://github.com/zowe/zowe-cli) plugin based on this functionality, see https://github.com/zowe/zowe-cli-ftp-plugin
@@ -16,7 +16,6 @@ For a [Zowe CLI](https://github.com/zowe/zowe-cli) plugin based on this function
 
 ```bash
 npm install zos-node-accessor   # Put latest version in your package.json
-npm test                        # You'll need the dev dependencies to launch tests
 ```
 
 ## Features
@@ -25,27 +24,52 @@ npm test                        # You'll need the dev dependencies to launch tes
 * Download/Upload MVS dataset or USS files
 * Submit JCL and query its status to track its completion
 * Access SYSOUT dataset
-* Some simple JCL, like initiating HRECALL, allocating dataset, and so on.
+
+## Migration from v1
+
+`zos-node-accessor` is rewritten in TypeScript, and defines API methods in more consistent way. So some old API methods are renamed. Here are about some details useful when you migrate the code using `zos-node-accessor` v1 to v2.
+
+* `listDataset(...)` is renamed to `listDatasets(...)`
+* `getDataset(...)` is split and renamed to `downloadFile` and `downloadDataset(...)`
+* `queryJob(...)` returns the enum member of `JobStatusResult`
+* Job methods takes the query option object like `JobIdOption`, `JobLogOption`, or `JobListOption`
+* `rename(...)` is split and renamed to `renameFile(...)` and `renameDataset(...)`
+* `delete(...)` is split and renamed to `deleteFile(...)` and `deleteDataset(...)`
+
+Many list methods in v2 like `listDatasets(...)` and `listFiles(...)` returns the objects with the type like `DataSetEntry`, instead of the key/value pairs in v1. To make the migration easier, you can enable migrationMode to have `zos-node-accessor` return the v1 key/value pairs, so that you can take time to change code to use the types object. This migration mode will be dropped in future. Let us know, if you have problem in removing the code using the key/value pairs.
+
+```
+    const zosAccessor = new ZosAccessor();
+    zosAccessor.setMigrationMode(true);
+    var connectionInfo = {
+        ....
+    };
+    await zosAccessor.connect(connectionInfo)
+```
 
 ## Usage
 
-This accessor leverages z/OS FTP server to interact with z/OS, it requires `JESINTERFACELevel` set to `2`
+This accessor leverages z/OS FTP server to interact with z/OS. To work with z/OS JES better, it requires `JESINTERFACELevel` set to `2` on z/OS FTP settings.
 
 * [Connection](#connection)
-* [MVS dataset or USS files](#mvs-dataset-or-uss-files)
-  * [Allocate](#allocate)
+* [MVS dataset](#mvs-dataset)
+  * [Allocate dataset](#allocate-dataset)
+  * [List datasets](#list-datasets)
+  * [List members of PDS dataset](#list-members-of-pds-dataset)
+  * [Upload dataset](#upload-mvs-dataset)
+  * [Download dataset](#download-mvs-dataset)
+  * [Delete dataset](#delete-dataset)
+  * [Rename dataset](#rename-dataset)
+* [USS file or directory](#uss-file-or-directory)
   * [Make directory](#make-directory)
-  * [List](#list)
-  * [Upload](#upload-mvs-dataset-or-uss-file)
-  * [Read](#read-mvs-dataset-or-uss-file)
-  * [Delete](#delete)
-  * [Rename](#rename)
+  * [List files](#list-files)
+  * [Upload file](#upload-uss-file)
+  * [Download file](#download-uss-file)
+  * [Delete file](#delete-uss-file)
+  * [Rename file](#rename-uss-file)
 * [JES jobs](#jes-jobs)
   * [List jobs](#list-jobs)
   * [Submit JCL](#submit-jcl)
-      * [Allocate dataset](#allocate-dataset)
-      * [Copy dataset](#copy-dataset)
-      * [Initiate HRECALL](#initiate-hrecall)
   * [Query job status](#query-job)
   * [Get job status](#get-job-status)
   * [Get JES spool files](#get-jes-spool-files)
@@ -53,51 +77,58 @@ This accessor leverages z/OS FTP server to interact with z/OS, it requires `JESI
 
 ### Connection
 
-Before connecting to a z/OS server, you need to initialize an instance using the constructor `new zosAccessor()`, then call the `connect(config)` method, where:
+Before connecting to a z/OS server, you need to initialize an instance using the constructor `new ZosAccessor()`, then call the `connect(option: ConnectionOption)` method, where:
 
 ##### Parameter
 
-* config - _object_ - Configuration passed to the underlying ftp library, valid properties:
+* option - _ConnectionOption_ - Configuration passed to the underlying ftp library.
+
+ConnectionOption
   * user - _string_ - Username for authentication on z/OS. **Default:** 'anonymous'
   * password - _string_ - Password for authentication on z/OS. **Default:** 'anonymous@'
   * host - _string_ - The hostname or IP address of the z/OS server to connect to. **Default:** 'localhost'
-  * port - _integer_ - The port of the z/OS FTP server. **Default:** 21
-  * secure - _mixed_ - Set to true for both control and data connection encryption, 'control' for control connection encryption only, or 'implicit' for implicitly encrypted control connection (this mode is deprecated in modern times, but usually uses port 990) **Default:** false
+  * port - _number_ - The port of the z/OS FTP server. **Default:** 21
+  * secure - _boolean_ - Set to true for both control and data connection encryption. **Default:** false
   * secureOptions - _object_ - Additional options to be passed to `tls.connect()`. **Default:** (none)
-  * connTimeout - _integer_ - How long (in milliseconds) to wait for the control connection to be established. **Default:** 10000
-  * pasvTimeout - _integer_ - How long (in milliseconds) to wait for a PASV data connection to be established. **Default:** 10000
-  * keepalive - _integer_ - How often (in milliseconds) to send a 'dummy' (NOOP) command to keep the connection alive. **Default:** 10000
+  * connTimeout - _number_ - How long (in milliseconds) to wait for the control connection to be established. **Default:** 30000
+  * pasvTimeout - _number_ - How long (in milliseconds) to wait for a PASV data connection to be established. **Default:** 30000
+  * keepalive - _number_ - How often (in milliseconds) to send a 'dummy' (NOOP) command to keep the connection alive. **Default:** 10000
 
 ##### Return
 
-A promise that resolves itself (the connection to z/OS), and rejects on any error.
+A promise that resolves itself (ZosAccessor object), and rejects on any error.
 
 ##### Example
 
-```js
-var Client = require('zos-node-accessor');
+```ts
+import { ZosAccessor } from '../zosAccessor';
 
-var c = new Client();
-// connect to localhost:21 as hansome using password
-c.connect({user: 'myname', password:'mypassword'})
-  .then(function(connection) {
-    // here connection equals to outer c
-  })
-  .catch(function(err) {
-    // handle error
-  });
+const accessor = new ZosAccessor();
+await accessor.connect({
+    user: 'myname',
+    password: 'mypassword',
+    host: 'localhost',
+    port: 21,
+    pasvTimeout: 60000,
+    secure: true,
+    secureOptions: {
+        ca: [ caBuffer ]
+    }
+});
 ```
 
-### MVS dataset or USS files
+### MVS dataset
 
-#### Allocate
+#### Allocate Dataset
 
-`allocateDataset(datasetName, allocateParams)` - Allocate sequential or partition (with the DCB attribut "DSORG=PO") dataset.
+`allocateDataset(datasetName: string, allocateParamsOrString?: string | AllocateParams)` - Allocate sequential or partition (with the DCB attribut "DSORG=PO") dataset.
 
 ##### Parameter
 
 * datasetName - _string_ -  Dataset name to allocate.
-* allocateParams - _object | string_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}. The tested attributes includes BLKsize/BLOCKSize, Directory, DSORG, LRecl, PDSTYPE, PRImary, RECfm, SECondary, and TRacks.
+* allocateParams - _string | AllocateParams_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}. The tested attributes includes BLKsize/BLOCKSize, Directory, DSORG, LRecl, PDSTYPE, PRImary, RECfm, SECondary, and TRacks.
+
+Here is the complete list that z/OS FTP supports. Part of them are verified.
 
 Option Key | Description
 ---- | ---
@@ -127,33 +158,80 @@ A promise that resolves on success, rejects on error.
 
 ##### Example
 
-```js
-connection.allocateDataset('ABC.DEF', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320})
-  .then(function() {
-    console.log('Success');
-  })
-  .catch(function(err) {
-    // handle error
-  });
+```ts
+await connection.allocateDataset('HLQ.ABC.DEF', 'LRECL=80 RECFM=FB BLKSIZE=320');
 ```
 
 ```js
-connection.allocateDataset('ABC.PDS', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320, 'DSORG': 'PO', 'DIRECTORY': 20})
-  .then(function() {
-    console.log('Success');
-  })
-  .catch(function(err) {
-    // handle error
-  });
+await connection.allocateDataset('HLQ.ABC.PDS', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320, 'DSORG': 'PO', 'DIRECTORY': 20});
 ```
+#### List Datasets
 
-#### Make directory
+`listDatasets(dsn: string)` - Lists the datasets whose names match with the given dataset name.
 
-`makeDirectory(directoryName)` - Make USS directory with the given directory name.
+Note: This method is renamed from `listDataset(dsnOrDir)` in v1.0.x, to be consistent with the other list methods.
 
 ##### Parameter
 
-* datasetName - _string_ -  Dataset name to allocate.
+* dsn - _string_ -  Full qualified name of dataset, or dataset name with wildcards (* or ?)
+
+##### Return
+
+A promise that resolves a list of `DatasetEntry`.
+
+DatasetEntry
+
+* blockSize - _number_ - Block size
+* dsOrg - _string_ - Dataset organization
+* extends - _number_ - How many extends
+* name - _string_ - Dataset name
+* isMigrated - _boolean_ - Is migrated or not. When migrated, many attributes like recordLength is unknown.
+* recordFormat - _string_ - Record format
+* recordLength - _number_ - Record length
+* referred - _string_ - Last referred date
+* unit - _string_ - Device unit
+* usedTracks - _number_ - Used tracks
+* volume - _string_ - Volume
+
+##### Example
+
+```ts
+await connection.listDatasets('HQL.*.JCL');
+for (const entry of list) {
+  console.log('name:', entry.name, 'dsorg', entry.dsOrg);
+}
+```
+
+#### List members of PDS dataset
+
+`listMembers(partitionDsn: string)` - Lists the members of partition dataset
+
+##### Parameter
+
+* partitionDsn - _string_ -  Full qualified name of partition dataset
+
+##### Return
+
+A promise that resolves a list of `DatasetMemberEntry`.
+
+DatasetMemberEntry
+
+* changed - _string_ - Changed date
+* created - _string_ - Created date
+* name - _string_ - Member name
+* size - _number_ - Size
+* version - _string_ - Version
+
+#### Upload MVS dataset
+
+`uploadDataset(input: Input, destDataset: string, transferMode: TransferMode = TransferMode.ASCII, allocateParamsOrString?: string | AllocateParams)` - Uploads data to the specified dataset on z/OS.
+
+##### Parameter
+
+* input - _Input_ -  Input, which can be a [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams), a [Buffer](https://nodejs.org/api/buffer.html), or a path to a local file.
+* destDataset - _string_ -  Name of the dataset to store the uploaded data.
+* transferMode - TransferMode_ -  Data transfer mode, either TransferMode.ASCII or TransferMode.BINARY. **When transfering 'ascii' files, the end-of-line sequence of input should always be `\r\n`**. Otherwise the transfered file will get truncated.
+* allocateParamsOrString - _string | AllocateParams_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}. The tested attributes: BLKsize/BLOCKSize, LRecl, RECfm, PRImary, SECondary, TRacks.
 
 ##### Return
 
@@ -161,135 +239,47 @@ A promise that resolves on success, rejects on error.
 
 ##### Example
 
-```js
-connection.makeDirectory('/u/user/my_directory'})
-  .then(function() {
-    console.log('Success');
-  })
-  .catch(function(err) {
-    // handle error
-  });
+```ts
+import * as fs from 'fs';
+
+const input = fs.readFileSync('/etc/hosts', 'utf8').replace(/\r?\n/g, '\r\n');
+await connection.uploadDataset(input, 'HLQ.HOSTS');
+await connection.uploadDataset(input, 'HLQ.HOSTS', "LRECL=80 RECFM=FB");
 ```
 
-#### List
+#### Download MVS dataset
 
-`listDataset(dsnOrDir)` - List MVS datasets or USS files
-
-##### Parameter
-
-* dsnOrDir - _string_ -  Specify a full qualified dataset name, supporting wildcards (* or ?), PDS members (HLQ.JCL(*)) and USS directory.
-
-##### Return
-
-A promise that resolves a list of 
-
-* dataset entries. Each entry has the property of `Volume`, `Unit`, `Referred`, `Ext`, `Used`, `Recfm`, `Lrecl`, `BlkSz`, `Dsorg`, and `Dsname`.
-
-* USS file entries. Each entry has the property of `name`, `size`, `owner`, `group`, and `permissions`. 
-
-##### Example
-
-```js
-connection.listDataset('HQL.*.JCL')
-  .then(function(list) {
-    for(var i=0; i<list.length; ++i) {
-      var entry = list[i];
-      console.log('name:', entry['Dsname'], 'dsorg', entry['Dsorg']);
-    }
-  })
-  .catch(function(err) {
-    // handle error
-  });
-```
-
-```js
-connection.listDataset('/u/user1/')
-  .then(function(list) {
-    for(var i=0; i<list.length; ++i) {
-      var entry = list[i];
-      console.log(entry.name, entry.owner, entry.group, entry.size);
-    }
-  })
-  .catch(function(err) {
-    // handle error
-  });
-```
-
-#### Upload MVS dataset or USS file
-
-`uploadDataset(input, destDataset, dataType, allocateParams)` - Upload a local file to MVS dataset or USS file.
-
-##### Parameter
-
-* input - _any_ -  A [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams), a [Buffer](https://nodejs.org/api/buffer.html), or a path to a local file that needs uploading.
-* destDataset - _string_ -  Dataset name to used to store the uploaded file, if it starts with `/` this file will be uploaded to USS.
-* dataType - _string (default: ascii)_ -  Transfer data type, it should be 'ascii' or 'binary', **when transfering 'ascii' files, the end-of-line sequence of input should always be `\r\n`**, otherwise the transfered file will get truncated.
-* allocateParams - _object | string_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}. The tested attributes: BLKsize/BLOCKSize, LRecl, RECfm, PRImary, SECondary, TRacks.
-
-##### Return
-
-A promise that resolves on success, rejects on error.
-
-##### Example
-
-```js
-var fs = require('fs');
-var input = fs.readFileSync('/etc/hosts', 'utf8').replace(/\r?\n/g, '\r\n');
-connection.uploadDataset(input, 'hosts')
-  .then(function() {
-    console.log('Success');
-  })
-  .catch(function(err) {
-    // handle error
-  });
-```
-
-```js
-var fs = require('fs');
-var input = fs.readFileSync('/etc/hosts', 'utf8').replace(/\r?\n/g, '\r\n');
-connection.uploadDataset(input, 'HLQ.HOSTS', "LRECL=80 RECFM=FB")
-  .then(function() {
-    console.log('Success');
-  })
-  .catch(function(err) {
-    // handle error
-  });
-```
-
-#### Read MVS dataset or USS file
-
-`getDataset(dsn, dataType, stream)` - Get the contents of the MVS dataset or USS file.
+`downloadDataset(dsn: string, transferMode: TransferMode = TransferMode.ASCII, stream = false)` - Downloads the specified dataset or member of patition dataset.
 
 ##### Parameter
 
 * dsn - _string_ -  Specify a full qualified dataset name, or USS file name. It **CAN NOT** contain any wildcard (*).
-* dataType - _string (default: 'ascii')_ -  Transfer data type, accepts three options `binary`,  `ascii`, `ascii_strip_eol`. When downloading an ascii dataset, dataType should be either `ascii` or `ascii_strip_eol` so that the FTP server converts `EBCDIC` characters to  `ASCII`, `ascii_strip_eol` tells FTP server not the append a CLRF to the end of each record.
-* stream - _boolean (default: false)_ -  `true` if you want to obtain a [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams) of the data set content, or `false` to read a full dataset into memory (in Buffer).
+* transferMode - _TransferMode_ -  `TransferMode.ASCII`, `TransferMode.BINARY`, or `TransferMode.ASCII_STRIP_EOL`. When downloading a text dataset, transferMode should be either `TransferMode.ASCII` or `TransferMode.ASCII_STRIP_EOL` so that z/OS FTP service converts `EBCDIC` characters to  `ASCII`. `TransferMode.ASCII_STRIP_EOL` asks z/OS FTP service not to append a `CLRF` to the end of each record.
+* stream - _boolean_ -  `true` if you want to obtain a [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams) of the data set content, or `false` to read a full dataset into memory (in Buffer). The buffer accepts up to 4MB data. For large dataset, use `stream=true` instead.
 
 ##### Return
 
-A promise that resolves content of the dataset or file in either `Buffer` or `ReadableStream`.
+A promise that resolves content of the dataset in either `Buffer` or `ReadableStream`.
 
 ##### Example
 
-```js
-connection.getDataset('HQL.AA.JCL', 'ascii')
-  .then(function(jclBuffer) {
-    console.log('JCL is:');
-    console.log(jclBuffer.toString());
-  })
-  .catch(function(err) {
-    // handle error
-  });
+```ts
+const jclBuffer = await connection.downloadDataset('HQL.AA.JCL', TransferMode.ASCII);
+console.log('JCL is:');
+console.log(jclBuffer.toString());
+
+const jclStream = await connection.downloadDataset('HQL.AA.JCL(MEMBER1)', TransferMode.ASCII, true);
+const writable = fs.createWriteStream('file.txt');
+jclStream.pipe(writable);
 ```
 
-#### Delete
+#### Delete dataset
 
-`delete(dsn)` - Delete a dataset or USS file.
+`deleteDataset(dsn)` - Deletes the dataset or member of parition dataset whose names match with the given dataset name.
 
 ##### Parameter
 
-* dsn - _string_ -  Specify a full qualified dataset name to delete, it **CAN NOT** contain a wildcard (*).
+* dsn - _string_ -  Specify a full qualified dataset name to delete. It **CAN NOT** contain a wildcard (*).
 
 ##### Return
 
@@ -297,24 +287,18 @@ A promise that resolves on success, rejects on error.
 
 ##### Example
 
-```js
-connection.deleteDataset('HQL.AA.JCL')
-  .then(function() {
-    console.log('Deleted');
-  })
-  .catch(function(err) {
-    // handle error
-  });
+```ts
+await connection.deleteDataset('HQL.AA.JCL');
 ```
 
-#### Rename
+#### Rename dataset
 
-`rename(oldDataset, newDataset)` - Renames oldDataset to newDataset.
+`renameDataset(dsn: string, newDsn string)` - Renames dataset, member in partition dataset.
 
 ##### Parameter
 
-* oldDataset - _string_ -  Old dataset name.
-* newDataset - _string_ -  New dataset name to rename to.
+* dsn - _string_ -  Old dataset name.
+* newDsn - _string_ -  New dataset name to rename to.
 
 ##### Return
 
@@ -322,80 +306,191 @@ A promise that resolves on success, rejects on error.
 
 ##### Example
 
-```js
-connection.rename('HQL.AA.JCL', 'HQL.BB.JCL')
-  .then(function() {
-    console.log('Renamed');
-  })
-  .catch(function(err) {
-    // handle error
-  });
+```ts
+await connection.renameDataset('HQL.AA.JCL', 'HQL.BB.JCL')
+```
+
+### USS file or directory
+
+#### Make directory
+
+`makeDirectory(directoryName: string)` - Makes USS directory with the given directory name.
+
+##### Parameter
+
+* directoryName - _string_ -  Makes USS directory with the given directory name.
+
+##### Return
+
+A promise that resolves on success, rejects on error.
+
+##### Example
+
+```ts
+await connection.makeDirectory('/u/user/my_directory'});
+```
+
+#### List files
+
+`listFiles(dirPath: string)` - Lists files whose names match with the given path name.
+
+##### Parameter
+
+* dirPath - _string_ -  Directory to list or file name with widecards (* or ?)
+
+##### Return
+
+A promise that resolves a list of `USSEntry`.
+
+USSEntry
+
+* name - _string_ - File or directory name
+* group - _string_ - Group
+* fileType - _FileType_ - File type
+* linkedTo - _string_ - The target file if this entry is the link
+* lastModified - _Date_ - Last modified date
+* owner - _string_ - Owner
+* permissions - _string_ - Permission string
+* size - _number_ - File size
+
+##### Example
+
+```ts
+const list = await connection.listFiles('/u/user1/');
+for (const entry of list) {
+    console.log(entry.name, entry.owner, entry.group, entry.size);
+}
+```
+
+#### Upload USS file
+
+`uploadFile(input: Input, destFilePath: string, transferMode: TransferMode = TransferMode.ASCII)` - Uploads data to the specified USS file on z/OS.
+
+##### Parameter
+
+* input - _Input_ -  Input, which can be a [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams), a [Buffer](https://nodejs.org/api/buffer.html), or a path to a local file.
+* destFilePath - _string_ -  Path name of the destination file on z/OS.
+* transferMode - TransferMode_ -  Data transfer mode, either TransferMode.ASCII or TransferMode.BINARY. 
+
+##### Return
+
+A promise that resolves on success, rejects on error.
+
+##### Example
+
+```ts
+import * as fs from 'fs';
+
+const input = fs.readFileSync('/etc/hosts', 'utf8');
+await connection.uploadFile(input, '/u/username/hosts');
+```
+
+#### Download USS file
+
+`downloadFile(filePath: string, transferMode: TransferMode = TransferMode.ASCII, stream = false)` - Downloads the specified USS file.
+
+##### Parameter
+
+* filePath - _string_ -  USS file path name.
+* transferMode - _TransferMode_ -  `TransferMode.ASCII`, `TransferMode.BINARY`. When downloading a text dataset, transferMode should be either `TransferMode.ASCII` so that z/OS FTP service converts `EBCDIC` characters to  `ASCII`.
+* stream - _boolean_ -  `true` if you want to obtain a [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams) of the file content, or `false` to read a full file into memory (in Buffer). The buffer accepts up to 4MB data. For large file, use `stream=true` instead.
+
+##### Return
+
+A promise that resolves content of the file in either `Buffer` or `ReadableStream`.
+
+##### Example
+
+```ts
+const jclBuffer = await connection.downloadFile('/etc/hosts', TransferMode.ASCII);
+console.log('JCL is:');
+console.log(jclBuffer.toString());
+
+const jclStream = await connection.downloadFile('/etc/hosts', TransferMode.ASCII, true);
+const writable = fs.createWriteStream('file.txt');
+jclStream.pipe(writable);
+```
+
+#### Delete USS file
+
+`deleteFile(filePath: string, fileType: FileToOperate = FileToOperate.FILE_OR_DIRECTORY)` - Deletes the USS files or directory whose names match with the given file path.
+
+##### Parameter
+
+* filePath - _string_ -  The path name of USS file or directory. It **CAN NOT** contain a wildcard (*).
+
+##### Return
+
+A promise that resolves on success, rejects on error.
+
+##### Example
+
+```ts
+await connection.deleteFile('/u/username/myfile');
+await connection.deleteFile('/u/username/mydir');                                // Delete it, if it's empty
+await connection.deleteFile('/u/username/mydir', FileToOperate.WHOLE_DIRECTORY); // Delete it, even if it's not empty.
+```
+
+#### Rename USS file
+
+`renameFile(name: string, newName: string)` - Renames USS file/directory.
+
+##### Parameter
+
+* name - _string_ -  Old file name.
+* newName - _string_ -  New file name to rename to.
+
+##### Return
+
+A promise that resolves on success, rejects on error.
+
+##### Example
+
+```ts
+await connection.renameFile('/u/username/myfile', '/u/username/newfile')
 ```
 
 ### JES jobs
 
 #### List jobs
 
-`listJobs(jobNameOrOption)` - List JES jobs matching the given jobName or query option. The following parameters are accepted:
+`listJobs(queryOption?: JobListOption)` - Lists the jobs matching the given query option. If the query option is not provided, it will list all jobs of the current user.
 
 ##### Parameter
 
-* jobName - specify a JES job name, it can contain a wildcard (*)
+* queryOption - _JobListOption_ - Query option
 
-##### Parameter
-
-* option - _object_ -  Option which contains:
-  *  jobName - _string_ - specify a JES job name, which is optional and can contain a wildcard (*)
-  *  jobId - _string_ - specify a JES job ID, which is optional
-  *  owner - _string_ - specify a JES job owner, which is optional and can contain a wildcard (*)
-  *  status - _string_ - specify a JES job status, eg. ALL, OUTPUT, which is optional  
+JobListOption
+* jobName - _string_ - Job name, which is optional and can contain a wildcard (\*). **Default**: '*'
+* jobId - _string_ - Job ID, which is optional
+* owner - _string_ - Job owner, which is optional and can contain a wildcard (\*). **Default**: The current user
+* status - _string_ - Job status, eg. ALL, OUTPUT, which is optional. **Default**: 'ALL'
 
 ##### Return
 
-A promise that resolves an array of jobs, each item in the array is a string separated by space, for JESINTERFACELEVEL=2, those fields are JOBNAME, JOBID, OWNER, STATUS, CLASS
+A promise that resolves an array of `Job`. For JESINTERFACELEVEL=2, `Job` contains valid `jobName`, `jobId`, `owner`, `status`, `class`.
+
+Job
+* jobName - _string_ - Job name
+* jobId - _string_ - Job ID
+* owner - _string_ - Job owner
+* status - _string_ - Job status
+* class - _string_ - Job class
+* extra - _string_ - Extra information
 
 ##### Example
 
-```js
-connection.listJobs({jobName: 'TSU*', owner: 'MY-NAME'})
-  .then(function(jobList) {
-  })
-  .catch(function(err) {
-    // handle error
-  });
+```ts
+const jobs: Job[] = await connection.listJobs({jobName: 'TSU*', owner: 'MY-NAME'})
 ```
 
 #### Submit JCL
 
-`submitJCL(JCLText, cfg)` - Submit raw JCL text to JES server, or submitting built-in helper JCLs
+`submitJCL(jclText: string)` - Submits job with the specified JCL text.
 
 ##### Parameter
 
-* JCLText - _string_ -  The raw JCL string to be submitted, or the name of built-in JCLs if `cfg` is specified.
-* cfg - _object_ - configurations to the JCL, if this parameter is specified, then JCLText should be a name of the built-in JCLs, and the `cfg` should contain parameters for that JCL. Following is a list of built-in JCLs and their supported configurations:
-
-    * <h6>Allocate dataset</h6>
-
-      * name: `ALLOC`
-      * supported configurations: 
-
-      ```js
-      {
-        DSN: 'abc'
-      }
-      ```
-
-    * <h6>Copy dataset</h6>
-
-      * name: `COPY`
-      * supported configurations: 
-
-      ```js
-      {
-        from: 'abc',
-        to: 'edf'
-      }
-      ```
+* jclText - _string_ -  JCL text to submit
 
 ##### Return
 
@@ -403,184 +498,144 @@ A promise that resolves the submitted job id.
 
 ##### Example
 
-* Submit raw JCL
+```ts
+import * as fs from 'fs';
 
-```js
-var fs = require('fs');
-
-fs.readFile('./unpaxz.jcl', function(err, jclContent) {
-  connection.submitJCL(jclContent)
-    .then(function(jobId) {
-      console.log('Job id is', jobId);
-    })
-    .catch(function(err) {
-      // handle error
-    });
-});
-```
-
-* Submit a built-in JCL
-
-```js
-connection.submitJCL('HRECALLW', {INPUT: 'AA.BB'})
-  .then(function(jobId) {
-    console.log('Job id is', jobId);
-  })
-  .catch(function(err) {
-    // handle error
-  });
+const jcl = fs.readFileSync('./unpaxz.jcl');
+const jobId = await connection.submitJCL(jcl);
 ```
 
 #### Query job
 
-`queryJob(jobNameOrOption, jobId)` -  Query job status identified by job name and job id. The following parameters are accepted. _(Deprecated, use `getJobStatus` for more details.)_
+`queryJob(queryOption: JobIdOption)` -  Returns the status the job identified by job id and optional job name.
 
 ##### Parameter
 
-* jobName - _string_ -  Name of the job.
-* jobId - _string_ -  Id of the job.
-
-##### Parameter
-
- * option - _object_ - Option which contains:
-   *  jobName - _string_ - specify a JES job name, which is optional and can contain a wildcard (*)
-   *  jobId - _string_ - specify a JES job ID, which is required
-   *  owner - _string_ - specify a JES job owner, which is optional and can contain a wildcard (*)
+ * queryOption - _JobIdOption_ - Job query option
+ 
+JobIdOption
+*  jobId - _string_ - Job ID, which is required
+*  jobName - _string_ - Job name, which is optional and can contain a wildcard (\*). Better to have it, if it's known. **Default**: '*'
+*  owner - _string_ - Job owner, which is optional. **Default**: The current user
 
 ##### Return
 
-A promise that resolves status of the job, it is one of the following values:
+A promise that resolves status of the job, `JobStatusResult`.
 
-* RC_SUCCESS - Job succeeds
-* RC_ACTIVE - Job running
-* RC_FAIL - Job fails
-* RC_WAITING - Job waiting
-* RC_NOT_FOUND - Cannot find job specified by the jobName and jobId
+JobStatusResult
+* SUCCESS - Job succeeds
+* ACTIVE - Job running
+* FAIL - Job fails
+* WAITING - Job waiting
+* NOT_FOUND - Cannot find job specified by the jobName and jobId
 
 ##### Example
 
-```js
-connection.queryJob(jobName, jobId)
-  .then(function (status) {
-      switch(status) {
-          case connection.RC_SUCCESS:
-              console.log('Job succeeded');
-              break;
-          case connection.RC_FAIL:
-              console.log('Job failed');
-              break;
-          case connection.RC_ACTIVE:
-              console.log('Job running');
-              break;
-          case connection.RC_NOT_FOUND:
-              console.log('Job not found');
-              break;
-          default:
-              console.log('Unknown status');
-      }
-  });
+```ts
+const status = await connection.queryJob(jobName, jobId);
+switch(status) {
+    case JobStatusResult.SUCCESS:
+        console.log('Job succeeded');
+        break;
+    case JobStatusResult.FAIL:
+        console.log('Job failed');
+        break;
+    case JobStatusResult.ACTIVE:
+        console.log('Job is running');
+        break;
+    case JobStatusResult.WAITING:
+        console.log('Job is waiting');
+        break;
+    case JobStatusResult.NOT_FOUND:
+        console.log('Job is not found');
+        break;
+}
 ```
 
 #### Get job status
 
-`getJobStatus(jobIdOrOption)` -  Get job status specified by jobId or query option. The following parameters are accepted:
+`getJobStatus(queryOption: JobIdOption)` - Returns the status of the job specified by query option.
 
 ##### Parameter
 
-* jobId - _string_ -  Specify JES job ID
+* queryOption - _JobIdOption_ - Job ID option
 
-##### Parameter
-
-* option - _object_ - Option which contains:
-  *  jobId - _string_ - specify a JES job ID, which is required
-  *  owner - _string_ - specify a JES job owner, which is optional and can contain a wildcard (*)
-
+JobIdOption
+*  jobId - _string_ - Job ID, which is required
+*  jobName - _string_ - Job name, which is optional and can contain a wildcard (\*). Better to have it, if it's known. **Default**: '*'
+*  owner - _string_ - Job owner, which is optional. **Default**: The current user
 
 ##### Return
 
-A promise that resolves job status
-```js
-  {
-   jobname: "HRECALLW",
-   jobid: "JOB06385",
-   owner: "USER",
-   status: "OUTPUT",
-   class: "A",
-   rc: 0,
-   spoolFiles: [
-          {
-           id: 2,
-           stepname: "JES2",
-           procstep: "N/A",
-           c: "H",
-           ddname: "JESJCL",
-           byteCount: 315
-         }
-   ]}
-```
+A promise that resolves job status, `JobStatus`.
+
+JobStatus
+* jobName - _string_ - Job name
+* jobId - _string_ - Job ID
+* owner - _string_ - Job owner
+* status - _string_ - Job status
+* class - _string_ - Job class
+* extra - _string_ - Extra information
+* rc - _string | number_ - Job RC value, indicating job finished with numberic value or failed with error string
+* spoolFiles - _SpoolFile[]_ - Spool files
+
+SpoolFile
+* id - _number_ - Spool file ID
+* stepName - _string_ - Job step name
+* procStep - _string_ - Proc step name
+* class - _string_ - Class
+* ddName - _string_ - DD name
+* byteCount - _number_ - Bytes
+
 
 ##### Example
 
-```js
-connection.getJobStatus(jobId)
-  .then(function(jobStatus) {
-    console.log('Job status is:');
-    console.log(jobStatus);
-  })
-  .catch(function(err) {
-    // handle error
-  });
+```ts
+const jobStatus = await = connection.getJobStatus(jobId);
 ```
 
 #### Get JES spool files
 
-`getJobLog(jobNameOrOption, jobId)` - Get jes spool files identified by jobName and jobId. The following parameters are accepted:
+`getJobLog(queryOption: JobLogOption)` - Returns job spool files identified by jobId.
 
 ##### Parameter
 
-* jobName - _string_ -  Name of the job. **Default:** '*'
-* jobId - _string_ -  Id of the job.
-* spoolFileIndex - _string | integer_ - Index of the spool file to get. Number of spool files can be found using `getJobStatus`, specifying 'x' will return all spool files joined with the `!! END OF JES SPOOL FILE !!`. **Default:** 'x'
+* queryOption - _JobLogOption_ - Job log query option
 
-##### Parameter
-
-* option - _object_ - Option which contains:
-  *  jobName: Optional job name, default to '*'
-  *  jobId - _string_ - Specify a JES job ID, which is required
-  *  fileId - _string_ - Spool file index (1, 2, 3...) or 'x' returning all spool files joined with the `!! END OF JES SPOOL FILE !!`
-  *  owner - _string_ - Specify a JES job owner, which is optional and can contain a wildcard (*)
-
+JobLogOption
+*  fileId - _number_ - Spool file index (1, 2, 3...), or -1, which returns all spool files separated by `!! END OF JES SPOOL FILE !!`. **Default**: -1
+*  jobId - _string_ - Job ID, which is required
+*  jobName - _string_ - Job name, which is optional and can contain a wildcard (\*). **Default**: '*'
+*  owner - _string_ - Job owner, which is optional. **Default**: The current user
 
 ##### Return
 
-A promise that resolves spool files populated by the job
+A promise that resolves spool files' contents.
 
 ##### Example
 
-```js
-connection.getJobLog(jobName, jobId, 'x')
-  .then(function(jobLog) {
-    console.log('Job id is:');
-    console.log(jobLog);
-  })
-  .catch(function(err) {
-    // handle error
-  });
+```ts
+const spoolFileContents = await connection.getJobLog({ jobName, jobId, fileId: -1 });
+spoolFileContents.split(/\s*!! END OF JES SPOOL FILE !!\s*/)
+    .forEach(function (spoolFile, i) {
+        if (spoolFile.length > 0) {
+            console.log(`Spool file ${i}:`);
+            console.log(spoolFile);
+        }
+    });
 ```
 
 #### Delete job
 
-`deleteJob(jobIdOrOption)` - Purge/delete job by job id. The following parameters are accepted:
+`deleteJob(queryOption: JobIdOption)` - Deletes the job of the specified job id.
 
 ##### Parameter
 
-* jobId - _string_ -  JES job ID
+* queryOption - _JobIdOption_ - Job query option
 
-##### Parameter
-
-* option - _object_ - Option which contains:
-  *  jobId - _string_ - specify a JES job ID, which is required
-  *  owner - _string_ - specify a JES job owner, which is optional and can contain a wildcard (*)
+JobIdOption
+*  jobId - _string_ - Job ID, which is required
+*  owner - _string_ - Job owner, which is optional. **Default**: The current user.
 
 ##### Return
 
@@ -588,23 +643,18 @@ A promise that resolves on success, rejects on error.
 
 ##### Example
 
-```js
-connection.deleteJob('JOB25186')
-  .then(function() {
-    console.log('Deleted');
-  })
-  .catch(function(err) {
-    // handle error
-  });
+```ts
+await connection.deleteJob({ jobId: 'JOB25186' });
 ```
 
 ## Module Long Term Support Policy
 
 This module adopts the [Module Long Term Support (LTS)](http://github.com/CloudNativeJS/ModuleLTS) policy, with the following End Of Life (EOL) dates:
 
-| Module Version   | Release Date | Minimum EOL | EOL With     | Status  |
-|------------------|--------------|-------------|--------------|---------|
-| 1.x.x	         | Oct 2018    | Dec 2019    |              | Current |
+| Module Version | Release Date | Minimum EOL | Node Version     | EOL With | Status  |
+|----------------|--------------|-------------|------------------|----------|---------|
+| 2.x.x	         | May 2020     | May 2022    | v8, v10, v12     |          | Current |
+| 1.x.x	         | Oct 2018     | Dec 2019    | v6, v8, v10, v12 | Node v6  | EOL     |
 
 ## License
 

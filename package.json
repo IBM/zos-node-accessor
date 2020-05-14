@@ -1,43 +1,60 @@
 {
   "name": "zos-node-accessor",
-  "version": "1.0.7",
+  "version": "2.0.0",
   "description": "Accessing z/OS dataset and interacting with JES in NodeJS way",
-  "main": "./lib/zosAccessor",
+  "main": "./lib/zosAccessor.js",
+  "types": "./lib/zosAccessor.d.ts",
   "scripts": {
-    "test": "jest test/zosAccessor.tests.js test/objectParameter.tests.js",
-    "test:system": "jest test/zos.tests.js"
+    "start": "npm run build:live",
+    "build": "tsc -p .",
+    "build:live": "tsc --watch",
+    "lint": "eslint \"src/**\"",
+    "test": "jest src/__unit__/*.test.ts",
+    "test:system": "jest src/__test__/*.test.ts --runInBand",
+    "test:all": "jest src/*/*.test.ts --runInBand"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/IBM/zos-node-accessor"
   },
   "keywords": [
-    "zos",
-    "z/OS",
-    "jes",
     "dataset",
-    "jcl"
+    "ftp",
+    "jcl",
+    "jes",
+    "uss",
+    "zos",
+    "z/OS"
   ],
   "dependencies": {
-    "debug": "~2.6.8",
     "ftp4": "~0.3.13",
     "q": "~1.4.1"
   },
   "devDependencies": {
-    "jest": "^24.9.0",
-    "sinon": "~1.17.7"
+    "@types/jest": "^25.1.4",
+    "@types/node": "^13.11.0",
+    "@types/q": "^1.5.2",
+    "jest": "^25.4.0",
+    "ts-jest": "^25.2.1",
+    "ts-node": "^8.5.4",
+    "tslint": "^6.1.0",
+    "typescript": "^3.7.4"
   },
   "files": [
     "./LICENSE",
     "./README.md",
-    "lib"
+    "lib/interfaces/*.d.ts",
+    "lib/interfaces/*.js",
+    "lib/*.d.ts",
+    "lib/*.js"
   ],
   "engines": {
-    "node": ">= 0.10.0"
+    "node": ">= 8"
   },
-  "author": "Chang Xin Miao <miaocx@cn.ibm.com>",
+  "author": "Qi Liang <liangqi@cn.ibm.com>",
   "contributors": [
-    "Qi Liang <liangqi@cn.ibm.com>"
+    "Na Tian <tiantn@cn.ibm.com",
+    "Chang Xin Miao <miaocx@cn.ibm.com>"
   ],
   "license": "EPL-1.0"
 }
