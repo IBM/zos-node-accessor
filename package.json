@@ -13,10 +13,7 @@
     "test:system": "jest src/__test__/*.test.ts --runInBand",
     "test:all": "jest src/*/*.test.ts --runInBand"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/IBM/zos-node-accessor"
-  },
+  "repository": "IBM/zos-node-accessor",
   "keywords": [
     "dataset",
     "ftp",
