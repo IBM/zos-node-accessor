@@ -57,6 +57,8 @@ export interface JobStatus extends Job {
      */
     rc?: string | number;
 
+    retcode?: string;
+
     /**
      * Spool files.
      */

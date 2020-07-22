@@ -86,6 +86,10 @@ export async function submitHelloJob(client: ZosAccessor) {
         status = await client.getJobStatus(queryStatus);
         await sleep(5000);
     }
+    while (status.retcode) {
+        status = await client.getJobStatus(queryStatus);
+        await sleep(5000);
+    }
     return { status, jobId, jobName };
 }
 

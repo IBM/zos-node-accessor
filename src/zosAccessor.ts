@@ -723,7 +723,7 @@ class ZosAccessor {
                             const deferred = Q.defer<JobStatusResult>();
                             this.getJobStatus({ jobId: queryOption.jobId, owner: option.owner })
                                 .then((jobStatus: JobStatus) => {
-                                    if (jobStatus.rc === 0) {
+                                    if (jobStatus.rc === 0 || jobStatus.retcode === 'RC 0000') {
                                         deferred.resolve(JobStatusResult.SUCCESS);
                                     } else {
                                         deferred.resolve(JobStatusResult.FAIL);
@@ -747,23 +747,36 @@ class ZosAccessor {
      *                          owner:   Specify a JES job owner, which is optional and can contain a wildcard (*)
      * @returns RC number or error string
      */
-    public async getRCFromJESMSGLG(queryOption: JobLogOption): Promise<number | string> {
+    public async getRCFromJESMSGLG(queryOption: JobLogOption): Promise<string> {
         return this.getJobLog(queryOption).then((log: string | SpoolFile[]) => {
             let rc;
+            let retcode = '';
             const logContents = log as string;
             if (logContents) {
-                const EYE_CATCHER = 'ENDED - RC=';
+                const EYE_CATCHER_1 = 'ENDED - RC=';
+                const EYE_CATCHER_2 = 'ENDED - ABEND=';
+                const EYE_CATCHER_3 = 'NOT AUTHORIZED';
                 logContents.split('\n').forEach((line: string) => {
-                    const posn = line.indexOf(EYE_CATCHER);
-                    if (posn !== -1) {
-                        rc = line.substring(posn + EYE_CATCHER.length).trim();
+                    const posn1 = line.indexOf(EYE_CATCHER_1);
+                    const posn2 = line.indexOf(EYE_CATCHER_2);
+                    const posn3 = line.indexOf(EYE_CATCHER_3);
+                    if (posn1 !== -1) {
+                        rc = line.substring(posn1 + EYE_CATCHER_1.length).trim();
+                        retcode = 'RC ' + line.substring(posn1 + EYE_CATCHER_1.length).trim();
+                        }
+                    else if(posn2 !== -1) {
+                        retcode = 'ABEND ' + line.substring(posn2 + EYE_CATCHER_2.length).trim();
+                        }
+                    else if(posn3 !== -1) {
+                        retcode = 'SEC ERROR';
                     }
-                });
+                    }
+                );
             }
             if (rc !== undefined) {
                 rc = parseInt(rc, 10);
             }
-            return Q.resolve(rc);
+            return Q.resolve(retcode);
         });
     }
 
@@ -861,6 +874,7 @@ class ZosAccessor {
                             if (pair.length === 2) {
                                 if (pair[0].toUpperCase() === 'RC') {
                                     jobStatus.rc = parseInt(pair[1], 10);
+                                    jobStatus.retcode = pair[0] + ' ' + pair[1];
                                 }
                             }
                         });
@@ -892,14 +906,22 @@ class ZosAccessor {
                     // USER  TSU18242 USER  OUTPUT TSU      ABEND=622 1 spool files
                     // USER  JOB00256 USER  OUTPUT A        (JCL error) 3 spool files
                     const extra = jobStatus.extra as string;
-                    if (extra && (extra.includes('error') || extra.includes('ABEND='))) {
+                    if (extra && (extra.includes('error'))) {
                         jobStatus.rc = extra;
+                        jobStatus.retcode = 'JCL ERROR';
+                        deferred.resolve(jobStatus);
+                        return;
+                    }
+                    else if(extra && (extra.includes('ABEND='))) {
+                        jobStatus.rc = extra;
+                        jobStatus.retcode = extra.replace('=', '');
                         deferred.resolve(jobStatus);
                         return;
                     }
 
+
                     // If job finished, while FTP doesn't provide RC
-                    if (jobStatus.status === 'OUTPUT' && jobStatus.rc === undefined) {
+                    if (jobStatus.status === 'OUTPUT' && (jobStatus.retcode === undefined || jobStatus.rc === undefined)) {
                         const spoolFiles = jobStatus.spoolFiles as SpoolFile[];
                         // Read RC from JESMSGLG
                         const file = spoolFiles.find((spoolFile: SpoolFile) => {
@@ -911,8 +933,9 @@ class ZosAccessor {
                                 jobId: option.jobId,
                                 owner: option.owner,
                             };
-                            this.getRCFromJESMSGLG(optionForJESMSGLG).then((rc: string | number) => {
-                                jobStatus.rc = rc;
+                            this.getRCFromJESMSGLG(optionForJESMSGLG).then((retcode: string) => {
+                                jobStatus.retcode = retcode;
+                                jobStatus.rc = retcode;
                                 deferred.resolve(jobStatus);
                             });
                         } else {
