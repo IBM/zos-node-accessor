@@ -747,7 +747,7 @@ class ZosAccessor {
      *                          owner:   Specify a JES job owner, which is optional and can contain a wildcard (*)
      * @returns RC number or error string
      */
-    public async getRCFromJESMSGLG(queryOption: JobLogOption): Promise<string> {
+    public async getRCFromJESMSGLG(queryOption: JobLogOption): Promise<number | string> {
         return this.getJobLog(queryOption).then((log: string | SpoolFile[]) => {
             let rc;
             let retcode = '';
@@ -760,23 +760,25 @@ class ZosAccessor {
                     const posn1 = line.indexOf(EYE_CATCHER_1);
                     const posn2 = line.indexOf(EYE_CATCHER_2);
                     const posn3 = line.indexOf(EYE_CATCHER_3);
-                    if (posn1 !== -1) {
-                        rc = line.substring(posn1 + EYE_CATCHER_1.length).trim();
+                   if (posn1 !== -1) {
+                        rc = parseInt(line.substring(posn1 + EYE_CATCHER_1.length).trim(), 10);
                         retcode = 'RC ' + line.substring(posn1 + EYE_CATCHER_1.length).trim();
                         }
                     else if(posn2 !== -1) {
                         retcode = 'ABEND ' + line.substring(posn2 + EYE_CATCHER_2.length).trim();
+                        rc = retcode;
                         }
                     else if(posn3 !== -1) {
                         retcode = 'SEC ERROR';
+                        rc = retcode;
                     }
                     }
                 );
             }
-            if (rc !== undefined) {
+            if (typeof(rc) === 'number') {
                 rc = parseInt(rc, 10);
             }
-            return Q.resolve(retcode);
+            return Q.resolve(rc);
         });
     }
 
@@ -914,15 +916,15 @@ class ZosAccessor {
                     }
                     else if(extra && (extra.includes('ABEND='))) {
                         jobStatus.rc = extra;
-                        jobStatus.retcode = extra.replace('=', '');
+                        jobStatus.retcode = extra.replace('=', ' ');
                         deferred.resolve(jobStatus);
                         return;
                     }
 
-
                     // If job finished, while FTP doesn't provide RC
                     if (jobStatus.status === 'OUTPUT' && (jobStatus.retcode === undefined || jobStatus.rc === undefined)) {
                         const spoolFiles = jobStatus.spoolFiles as SpoolFile[];
+                        if (spoolFiles !== undefined) {
                         // Read RC from JESMSGLG
                         const file = spoolFiles.find((spoolFile: SpoolFile) => {
                             return spoolFile.ddName === 'JESMSGLG';
@@ -933,14 +935,18 @@ class ZosAccessor {
                                 jobId: option.jobId,
                                 owner: option.owner,
                             };
-                            this.getRCFromJESMSGLG(optionForJESMSGLG).then((retcode: string) => {
-                                jobStatus.retcode = retcode;
-                                jobStatus.rc = retcode;
+                            this.getRCFromJESMSGLG(optionForJESMSGLG).then((rc: number | string) => {
+                                jobStatus.rc = rc;
+                                if (typeof(rc) === 'number' && isNaN(rc) === false) {
+                                   jobStatus.retcode = 'RC ' + (Array(4).join('0') + rc).slice(-4);
+                                } else {
+                                   jobStatus.retcode = rc.toString();
+                                }
                                 deferred.resolve(jobStatus);
                             });
                         } else {
                             deferred.resolve(jobStatus);
-                        }
+                        }}
                     } else {
                         deferred.resolve(jobStatus);
                     }
