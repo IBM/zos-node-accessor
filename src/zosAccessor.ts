@@ -723,7 +723,7 @@ class ZosAccessor {
                             const deferred = Q.defer<JobStatusResult>();
                             this.getJobStatus({ jobId: queryOption.jobId, owner: option.owner })
                                 .then((jobStatus: JobStatus) => {
-                                    if (jobStatus.rc === 0 || jobStatus.retcode === 'RC 0000') {
+                                    if (jobStatus.rc === 0) {
                                         deferred.resolve(JobStatusResult.SUCCESS);
                                     } else {
                                         deferred.resolve(JobStatusResult.FAIL);
@@ -750,7 +750,6 @@ class ZosAccessor {
     public async getRCFromJESMSGLG(queryOption: JobLogOption): Promise<number | string> {
         return this.getJobLog(queryOption).then((log: string | SpoolFile[]) => {
             let rc;
-            let retcode = '';
             const logContents = log as string;
             if (logContents) {
                 const EYE_CATCHER_1 = 'ENDED - RC=';
@@ -760,20 +759,14 @@ class ZosAccessor {
                     const posn1 = line.indexOf(EYE_CATCHER_1);
                     const posn2 = line.indexOf(EYE_CATCHER_2);
                     const posn3 = line.indexOf(EYE_CATCHER_3);
-                   if (posn1 !== -1) {
+                    if (posn1 !== -1) {
                         rc = parseInt(line.substring(posn1 + EYE_CATCHER_1.length).trim(), 10);
-                        retcode = 'RC ' + line.substring(posn1 + EYE_CATCHER_1.length).trim();
+                        } else if (posn2 !== -1) {
+                        rc = 'ABEND ' + line.substring(posn2 + EYE_CATCHER_2.length).trim();
+                        } else if (posn3 !== -1) {
+                        rc = 'SEC ERROR';
                         }
-                    else if(posn2 !== -1) {
-                        retcode = 'ABEND ' + line.substring(posn2 + EYE_CATCHER_2.length).trim();
-                        rc = retcode;
-                        }
-                    else if(posn3 !== -1) {
-                        retcode = 'SEC ERROR';
-                        rc = retcode;
-                    }
-                    }
-                );
+                    });
             }
             if (typeof(rc) === 'number') {
                 rc = parseInt(rc, 10);
@@ -913,8 +906,7 @@ class ZosAccessor {
                         jobStatus.retcode = 'JCL ERROR';
                         deferred.resolve(jobStatus);
                         return;
-                    }
-                    else if(extra && (extra.includes('ABEND='))) {
+                    } else if (extra && (extra.includes('ABEND='))) {
                         jobStatus.rc = extra;
                         jobStatus.retcode = extra.replace('=', ' ');
                         deferred.resolve(jobStatus);
@@ -922,7 +914,7 @@ class ZosAccessor {
                     }
 
                     // If job finished, while FTP doesn't provide RC
-                    if (jobStatus.status === 'OUTPUT' && (jobStatus.retcode === undefined || jobStatus.rc === undefined)) {
+                    if (jobStatus.status === 'OUTPUT' && (jobStatus.rc === undefined)) {
                         const spoolFiles = jobStatus.spoolFiles as SpoolFile[];
                         if (spoolFiles !== undefined) {
                         // Read RC from JESMSGLG
@@ -934,7 +926,7 @@ class ZosAccessor {
                                 fileId: file.id,
                                 jobId: option.jobId,
                                 owner: option.owner,
-                            };
+                        };
                             this.getRCFromJESMSGLG(optionForJESMSGLG).then((rc: number | string) => {
                                 jobStatus.rc = rc;
                                 if (typeof(rc) === 'number' && isNaN(rc) === false) {
@@ -943,7 +935,7 @@ class ZosAccessor {
                                    jobStatus.retcode = rc.toString();
                                 }
                                 deferred.resolve(jobStatus);
-                            });
+                                });
                         } else {
                             deferred.resolve(jobStatus);
                         }}
