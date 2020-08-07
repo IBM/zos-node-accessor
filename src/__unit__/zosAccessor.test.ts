@@ -43,6 +43,7 @@ import * as stream from 'stream';
 import { SpoolFile } from '../interfaces/SpoolFile';
 import { JobStatusResult, TransferMode, ZosAccessor } from '../zosAccessor';
 import { rawDatasetList } from './testInput';
+import { Stats } from 'fs';
 
 const USERNAME = 'ADCDA';
 
@@ -193,6 +194,7 @@ describe('z/OS node accessor', () => {
         const spoolFiles = status.spoolFiles as SpoolFile[];
         expect(spoolFiles.length).toBeGreaterThan(0);
         expect(status.rc).toBe(0);
+        expect(status.retcode).toBe('RC 0000');
         expect(status.jobId).toEqual(submittedJobId);
         expect(mockFtp4.list).toBeCalled();
     });
@@ -206,6 +208,7 @@ describe('z/OS node accessor', () => {
         const spoolFiles = status.spoolFiles as SpoolFile[];
         expect(spoolFiles.length).toBeGreaterThan(0);
         expect(status.rc).toBe('ABEND=622');
+        expect(status.retcode).toBe('ABEND 622');
         expect(status.jobId).toEqual('TSU18242');
         expect(mockFtp4.list).toBeCalled();
     });
@@ -219,6 +222,7 @@ describe('z/OS node accessor', () => {
         const spoolFiles = status.spoolFiles as SpoolFile[];
         expect(spoolFiles.length).toBeGreaterThan(0);
         expect(status.rc).toBe('(JCL error)');
+        expect(status.retcode).toBe('JCL ERROR');
         expect(status.jobId).toEqual('JOB00256');
         expect(mockFtp4.list).toBeCalled();
     });
@@ -332,9 +336,70 @@ describe('z/OS node accessor', () => {
         mockFtp4.get = jest.fn().mockImplementation((arg1, callback) => {
             callback(null, bufferStream);
         });
-
         const rc = await client.getRCFromJESMSGLG({jobId: 'jobId'});
         expect(rc).toBe(8);
+        expect(mockFtp4.get).toBeCalled();
+    });
+
+    it('can read correct RC code from JESMSGLG when job canceled', async () => {
+        const rawJCLMSGLG = [
+            '1                    J E S 2  J O B  L O G  --  S Y S T E M  P 2 1    --  N O D E  P K P A T 2 1',
+            '0',
+             '21.55.49 JOB18527 ---- THURSDAY,  06 AUG 2020 ----',
+             '21.55.49 JOB18527  IRR010I  USERID TNZSYS   IS ASSIGNED TO THIS JOB.',
+             '21.55.49 JOB18527  ICH70001I TNZSYS   LAST ACCESS AT 21:52:18 ON THURSDAY, AUGUST 6, 2020',
+             '21.55.49 JOB18527  $HASP373 SLEEP    STARTED - INIT 1    - CLASS A        - SYS P21',
+             '21.55.57 JOB18527  BPXP018I THREAD 14C5880000000000, IN PROCESS 83951641, ENDED  161',
+             '   161             WITHOUT BEING UNDUBBED WITH COMPLETION CODE 40222000',
+             '   161             , AND REASON CODE 00000000.',
+             '21.55.57 JOB18527  IEF450I SLEEP SLEEP - ABEND=S222 U0000 REASON=00000000  162',
+             '   162                     TIME=21.55.57',
+             '21.55.57 JOB18527  -                                         --TIMINGS (MINS.)--            ----PAGING COUNTS---',
+             '21.55.57 JOB18527  -JOBNAME  STEPNAME PROCSTEP    RC   EXCP    CPU    SRB  CLOCK   SERV  PG   PAGE   SWAP    VIO SWAPS',
+             '21.55.57 JOB18527  -SLEEP             SLEEP    *S222    204 ******    .00     .1    807   0      0      0      0     0',
+             '21.55.57 JOB18527  -SLEEP    ENDED.  NAME-                     TOTAL CPU TIME=   .00  TOTAL ELAPSED TIME=    .1',
+             '21.55.57 JOB18527  $HASP395 SLEEP    ENDED - ABEND=S222',
+            '0------ JES2 JOB STATISTICS ------',
+            '-  06 AUG 2020 JOB EXECUTION DATE',
+            '-            5 CARDS READ',
+            '-           55 SYSOUT PRINT RECORDS',
+            '-            0 SYSOUT PUNCH RECORDS',
+            '-            7 SYSOUT SPOOL KBYTES',
+            '-         0.13 MINUTES EXECUTION TIME',
+        ];
+        const bufferStream = new stream.PassThrough();
+        bufferStream.end(new Buffer(rawJCLMSGLG.join('\n')));
+        mockFtp4.get = jest.fn().mockImplementation((arg1, callback) => {
+            callback(null, bufferStream);
+        });
+        const rc = await client.getRCFromJESMSGLG({jobId: 'jobId'});
+        expect(rc).toBe('ABEND S222');
+        expect(mockFtp4.get).toBeCalled();
+    });
+
+    it('can read correct RC code from JESMSGLG when job has security error', async () => {
+        const rawJCLMSGLG = [
+            '1                    J E S 2  J O B  L O G  --  S Y S T E M  P 2 1    --  N O D E  P K P A T 2 1',
+            '0',
+             '01.31.28 JOB18539 ---- FRIDAY,    07 AUG 2020 ----',
+             '01.31.28 JOB18539  ICH408I USER(XIXUE   ) GROUP(TESTER  ) NAME(XI XUE BJ JIA       )',
+             '                     SUBMITTER(TNZSYS  )',
+             '                   LOGON/JOB INITIATION - SUBMITTER IS NOT AUTHORIZED BY USER',
+            '-$HASP106 JOB DELETED BY JES2 OR CANCELLED BY OPERATOR BEFORE EXECUTION',
+            '0------ JES2 JOB STATISTICS ------',
+            '0           11 CARDS READ',
+            '0           13 SYSOUT PRINT RECORDS',
+            '0            0 SYSOUT PUNCH RECORDS',
+            '0            0 SYSOUT SPOOL KBYTES',
+            '0         0.00 MINUTES EXECUTION TIME',
+        ];
+        const bufferStream = new stream.PassThrough();
+        bufferStream.end(new Buffer(rawJCLMSGLG.join('\n')));
+        mockFtp4.get = jest.fn().mockImplementation((arg1, callback) => {
+            callback(null, bufferStream);
+        });
+        const rc = await client.getRCFromJESMSGLG({jobId: 'jobId'});
+        expect(rc).toBe('SEC ERROR');
         expect(mockFtp4.get).toBeCalled();
     });
 

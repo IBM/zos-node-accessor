@@ -752,15 +752,23 @@ class ZosAccessor {
             let rc;
             const logContents = log as string;
             if (logContents) {
-                const EYE_CATCHER = 'ENDED - RC=';
+                const EYE_CATCHER_1 = 'ENDED - RC=';
+                const EYE_CATCHER_2 = 'ENDED - ABEND=';
+                const EYE_CATCHER_3 = 'NOT AUTHORIZED';
                 logContents.split('\n').forEach((line: string) => {
-                    const posn = line.indexOf(EYE_CATCHER);
-                    if (posn !== -1) {
-                        rc = line.substring(posn + EYE_CATCHER.length).trim();
-                    }
-                });
+                    const posn1 = line.indexOf(EYE_CATCHER_1);
+                    const posn2 = line.indexOf(EYE_CATCHER_2);
+                    const posn3 = line.indexOf(EYE_CATCHER_3);
+                    if (posn1 !== -1) {
+                        rc = parseInt(line.substring(posn1 + EYE_CATCHER_1.length).trim(), 10);
+                        } else if (posn2 !== -1) {
+                        rc = 'ABEND ' + line.substring(posn2 + EYE_CATCHER_2.length).trim();
+                        } else if (posn3 !== -1) {
+                        rc = 'SEC ERROR';
+                        }
+                    });
             }
-            if (rc !== undefined) {
+            if (typeof(rc) === 'number') {
                 rc = parseInt(rc, 10);
             }
             return Q.resolve(rc);
@@ -861,6 +869,7 @@ class ZosAccessor {
                             if (pair.length === 2) {
                                 if (pair[0].toUpperCase() === 'RC') {
                                     jobStatus.rc = parseInt(pair[1], 10);
+                                    jobStatus.retcode = pair[0] + ' ' + pair[1];
                                 }
                             }
                         });
@@ -892,15 +901,22 @@ class ZosAccessor {
                     // USER  TSU18242 USER  OUTPUT TSU      ABEND=622 1 spool files
                     // USER  JOB00256 USER  OUTPUT A        (JCL error) 3 spool files
                     const extra = jobStatus.extra as string;
-                    if (extra && (extra.includes('error') || extra.includes('ABEND='))) {
+                    if (extra && (extra.includes('error'))) {
                         jobStatus.rc = extra;
+                        jobStatus.retcode = 'JCL ERROR';
+                        deferred.resolve(jobStatus);
+                        return;
+                    } else if (extra && (extra.includes('ABEND='))) {
+                        jobStatus.rc = extra;
+                        jobStatus.retcode = extra.replace('=', ' ');
                         deferred.resolve(jobStatus);
                         return;
                     }
 
                     // If job finished, while FTP doesn't provide RC
-                    if (jobStatus.status === 'OUTPUT' && jobStatus.rc === undefined) {
+                    if (jobStatus.status === 'OUTPUT' && (jobStatus.rc === undefined)) {
                         const spoolFiles = jobStatus.spoolFiles as SpoolFile[];
+                        if (spoolFiles !== undefined) {
                         // Read RC from JESMSGLG
                         const file = spoolFiles.find((spoolFile: SpoolFile) => {
                             return spoolFile.ddName === 'JESMSGLG';
@@ -910,14 +926,19 @@ class ZosAccessor {
                                 fileId: file.id,
                                 jobId: option.jobId,
                                 owner: option.owner,
-                            };
-                            this.getRCFromJESMSGLG(optionForJESMSGLG).then((rc: string | number) => {
+                        };
+                            this.getRCFromJESMSGLG(optionForJESMSGLG).then((rc: number | string) => {
                                 jobStatus.rc = rc;
+                                if (typeof(rc) === 'number' && isNaN(rc) === false) {
+                                   jobStatus.retcode = 'RC ' + (Array(4).join('0') + rc).slice(-4);
+                                } else {
+                                   jobStatus.retcode = rc.toString();
+                                }
                                 deferred.resolve(jobStatus);
-                            });
+                                });
                         } else {
                             deferred.resolve(jobStatus);
-                        }
+                        }}
                     } else {
                         deferred.resolve(jobStatus);
                     }
