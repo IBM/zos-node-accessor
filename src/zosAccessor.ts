@@ -78,6 +78,22 @@ export enum TransferMode {
      * The data is transferred in binary mode, in which no encoding conversion will happen.
      */
     BINARY = 'binary',
+
+    /**
+     * The data is transferre in text mode, in which encoding conversion like ASCII/EBCDIC will happen, and
+     * the EOL of each record in dataset will be removed.
+     */
+    BINARY_STRIP_EOL = 'binary_strip_eol',
+
+    /**
+     * The data is transferred in rdw mode, in which variable length dataset downloading is available.
+     */
+    ASCII_RDW = 'ascii_rdw',
+
+    /**
+     * The data is transferred in rdw mode, in which variable length dataset downloading is available.
+     */
+    BINARY_RDW = 'binary_rdw',
 }
 
 /**
@@ -371,13 +387,20 @@ class ZosAccessor {
         // We still need this check in case the other TransferMode will be added in future.
         if (transferMode !== TransferMode.ASCII &&
             transferMode !== TransferMode.BINARY &&
-            transferMode !== TransferMode.ASCII_STRIP_EOL) {
+            transferMode !== TransferMode.ASCII_STRIP_EOL &&
+            transferMode !== TransferMode.BINARY_STRIP_EOL &&
+            transferMode !== TransferMode.ASCII_RDW &&
+            transferMode !== TransferMode.BINARY_RDW) {
             throw new Error('Unsupported data type: ' + transferMode);
         }
         let sbsendeol = 'SBSENDEOL=CRLF';
-        if (transferMode === TransferMode.ASCII_STRIP_EOL) {
+        if ((transferMode === TransferMode.ASCII_RDW) || (transferMode === TransferMode.ASCII_STRIP_EOL)) {
             sbsendeol = 'SBSENDEOL=NONE';
             transferMode = TransferMode.ASCII;
+        }
+        if ((transferMode === TransferMode.BINARY_RDW) || (transferMode === TransferMode.BINARY_STRIP_EOL)) {
+            sbsendeol = 'SBSENDEOL=NONE';
+            transferMode = TransferMode.BINARY;
         }
 
         // ftpClient.ascii() or ftpClient.binary()
@@ -425,11 +448,11 @@ class ZosAccessor {
      * Downloads the specified dataset or member of patition dataset.
      *
      * @param dsn - Dataset name
-     * @param transferMode - TransferMode.ASCII, TransferMode.BINARY, or TransferMode.ASCII_STRIP_EOL.
+     * @param transferMode - TransferMode.ASCII, TransferMode.BINARY, TransferMode.RDW or TransferMode.ASCII_STRIP_EOL.
      *                       When downloading a text dataset, transferMode should be either `TransferMode.ASCII`
      *                       or `TransferMode.ASCII_STRIP_EOL` so that z/OS FTP service converts `EBCDIC` characters
      *                       to  `ASCII`. `TransferMode.ASCII_STRIP_EOL` asks z/OS FTP service not to append a `CLRF`
-     *                       to the end of each record.
+     *                       to the end of each record. `TransferMode.RDW` support to download variable length dataset.
      * @param {boolean} stream - `true` if you want to obtain a `ReadStream` of the data set content, or `false`
      *                           to read a full dataset into memory (in Buffer). The buffer accepts up to 4MB data.
      *                           For large dataset, use `stream=true` instead.
@@ -437,6 +460,15 @@ class ZosAccessor {
      */
     public async downloadDataset(dsn: string, transferMode: TransferMode = TransferMode.ASCII,
                                  stream = false): Promise<Buffer | ReadStream> {
+        if (TransferMode.ASCII_RDW || TransferMode.BINARY_RDW) {
+            const deferred = Q.defer<void>();
+            const ftpClient = this.client;
+            ftpClient.site('rdw', async (err: Error) => {
+                if (err) {
+                    return deferred.reject(err);
+                }
+          });
+        }
         return await this.download(dsn, transferMode, stream);
     }
 
@@ -1113,3 +1145,4 @@ class ZosAccessor {
 export {
     ZosAccessor,
 };
+
