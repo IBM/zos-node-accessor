@@ -3,6 +3,6 @@
     "port": 21,
     "username": "username",
     "password": "password",
-    "dsname": "dataset name",
-    "dssize": "dataset size in bytes"
+    "dsname_rdw": "dataset name",
+    "dssize_rdw": "dataset size in bytes"
 }

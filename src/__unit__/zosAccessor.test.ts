@@ -48,8 +48,6 @@ import * as stream from 'stream';
 import { SpoolFile } from '../interfaces/SpoolFile';
 import { JobStatusResult, TransferMode, ZosAccessor } from '../zosAccessor';
 import { rawDatasetList } from './testInput';
-import { Stats } from 'fs';
-import { promises } from 'dns';
 
 const USERNAME = 'ADCDA';
 

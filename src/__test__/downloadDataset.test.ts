@@ -30,8 +30,8 @@ if (!fs.existsSync(settingsFilePath)) {
 }
 
 const settings = JSON.parse(fs.readFileSync(settingsFilePath).toString());
-export const dsname = settings.dsname;
-export const dssize = settings.dssize;
+export const dsname_rdw = settings.dsname_rdw;
+export const dssize_rdw = settings.dssize_rdw;
 
 describe('The method of downloadDataset()', () => {
 
@@ -52,7 +52,7 @@ describe('The method of downloadDataset()', () => {
         }
     });
 
-    it('can get text contents from dataset with the default FileTransferType.ASCII', async () => {
+    it('can get text contents from dataset with the default TransferMode.ASCII', async () => {
         await accessor.uploadDataset('hello\nworld', dsn);
         const contents1 = await accessor.downloadDataset(dsn, TransferMode.ASCII);
         expect(contents1.toString().trim()).toBe('hello\nworld');
@@ -60,21 +60,21 @@ describe('The method of downloadDataset()', () => {
         expect(contents2.toString().trim()).toBe('hello\nworld');
     });
 
-    it('can get text contents as stream from dataset with the default FileTransferType.ASCII', async () => {
+    it('can get text contents as stream from dataset with the default TransferMode.ASCII', async () => {
         await accessor.uploadDataset('hello\nworld', dsn);
         const readSteam = await accessor.downloadDataset(dsn, TransferMode.ASCII, true) as fs.ReadStream;
         const buffer = await getStreamContents(readSteam);
         expect(buffer.toString().trim()).toBe('hello\nworld');
     });
 
-    it('can get text contents as stream pipe from dataset with the default FileTransferType.ASCII', async () => {
+    it('can get text contents as stream pipe from dataset with the default TransferMode.ASCII', async () => {
         await accessor.uploadDataset('hello\nworld', dsn);
         const readSteam = await accessor.downloadDataset(dsn, TransferMode.ASCII, true) as fs.ReadStream;
         const buffer = await getStreamContentsWithPipe(readSteam);
         expect(buffer.toString().trim()).toBe('hello\nworld');
     });
 
-    it('can get text contents from dataset with FileTransferType.ASCII_STRIP_EOL', async () => {
+    it('can get text contents from dataset with TransferMode.ASCII_STRIP_EOL', async () => {
         await accessor.uploadDataset('hello\r\nworld', dsn);
         const contents1 = await accessor.downloadDataset(dsn, TransferMode.ASCII);
         expect(contents1.toString().trim()).toBe('hello\r\nworld');
@@ -82,17 +82,17 @@ describe('The method of downloadDataset()', () => {
         expect(contents2.toString().trim()).toBe('helloworld');
     });
 
-    it('can get text contents from dataset with FileTransferType.BINARY', async () => {
+    it('can get text contents from dataset with TransferMode.BINARY', async () => {
         await accessor.uploadDataset('hello\r\nworld', dsn);
         const contents2 = await accessor.downloadDataset(dsn, TransferMode.BINARY);
         expect(contents2.toString('hex').trim()).toBe('8885939396a696999384');
     });
 
-    it.only('can download variable length dataset with FileTransferType.RDW', async () => {
-        const contents2 = await accessor.downloadDataset(dsname, TransferMode.BINARY_RDW);
+    it('can download variable length dataset with TransferMode.BINARY_RDW', async () => {
+        const contents2 = await accessor.downloadDataset(dsname_rdw, TransferMode.BINARY_RDW);
         fs.writeFileSync('./file', contents2);
         const stats = fs.statSync('./file')
         const fileSizeInBytes = stats.size
-        expect(fileSizeInBytes).toEqual(dssize);
+        expect(fileSizeInBytes).toEqual(dssize_rdw);
     });
 });
