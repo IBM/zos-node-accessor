@@ -24,7 +24,9 @@ const mockFtp4 = {
     }),
     delete: jest.fn(),
     end: jest.fn(),
-    get: jest.fn(),
+    get: jest.fn().mockImplementation((arg1, callback) => {
+        callback(null);
+    }),
     list: jest.fn(),
     logout: jest.fn(),
     put: jest.fn().mockImplementation((arg1, arg2, callback) => {
@@ -436,10 +438,9 @@ describe('z/OS node accessor', () => {
         expect(s.toString()).toBe('1234567890');
     });
 
-    it.only('can download variable length dataset with RDW mode', async (done) => {
-            await client.downloadDataset('dsn', TransferMode.BINARY_RDW);
-            expect(mockFtp4.site).toBeCalledWith('rdw', expect.any(Function));
-        done();
+    it('can download variable length dataset with RDW mode', async () => {
+        await client.downloadDataset('dsn', TransferMode.BINARY_RDW, true);
+        expect(mockFtp4.site).toBeCalledWith('rdw', expect.any(Function));
     });
 
     it('can convert allocation parameter object to string', async () => {

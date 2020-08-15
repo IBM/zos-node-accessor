@@ -20,7 +20,7 @@ Parser.parseListEntry = (line: string): string => {
 
 import FTP from 'ftp4';
 import path from 'path';
-import Q, { async } from 'q';
+import Q from 'q';
 
 import {
     parseDataSets,

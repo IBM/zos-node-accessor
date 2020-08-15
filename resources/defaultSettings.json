@@ -2,5 +2,7 @@
     "host": "host",
     "port": 21,
     "username": "username",
-    "password": "password"
+    "password": "password",
+    "dsname": "dataset name",
+    "dssize": "dataset size in bytes"
 }

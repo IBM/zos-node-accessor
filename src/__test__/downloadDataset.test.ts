@@ -16,10 +16,22 @@ import * as fs from 'fs';
 import { TransferMode, ZosAccessor } from '../zosAccessor';
 import { connectFTPServer, deleteDataset, getRandomDatasetName,
     getStreamContents, getStreamContentsWithPipe } from './testUtils';
-import { Stream } from 'stream';
+import path from 'path';
 
 let dsn: string;
 let pds: string;
+
+let settingsFilePath = '/build/zos-node-accessor/customSettings.json'; // For running on Jenkins server
+if (!fs.existsSync(settingsFilePath)) {
+    settingsFilePath = path.join(__dirname, '../../resources/customSettings.json');
+    if (!fs.existsSync(settingsFilePath)) {
+        throw new Error(`The settings file, ${settingsFilePath}, is not found.`);
+    }
+}
+
+const settings = JSON.parse(fs.readFileSync(settingsFilePath).toString());
+export const dsname = settings.dsname;
+export const dssize = settings.dssize;
 
 describe('The method of downloadDataset()', () => {
 
@@ -76,9 +88,7 @@ describe('The method of downloadDataset()', () => {
         expect(contents2.toString('hex').trim()).toBe('8885939396a696999384');
     });
 
-    it('can download variable length dataset with FileTransferType.RDW', async () => {
-        const dsname = 'IBMUSER.TEST.DS';  // input dataset name
-        const dssize = 75919;              // input dataset size in bytes
+    it.only('can download variable length dataset with FileTransferType.RDW', async () => {
         const contents2 = await accessor.downloadDataset(dsname, TransferMode.BINARY_RDW);
         fs.writeFileSync('./file', contents2);
         const stats = fs.statSync('./file')
