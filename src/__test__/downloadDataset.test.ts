@@ -16,6 +16,7 @@ import * as fs from 'fs';
 import { TransferMode, ZosAccessor } from '../zosAccessor';
 import { connectFTPServer, deleteDataset, getRandomDatasetName,
     getStreamContents, getStreamContentsWithPipe } from './testUtils';
+import { Stream } from 'stream';
 
 let dsn: string;
 let pds: string;
@@ -75,4 +76,13 @@ describe('The method of downloadDataset()', () => {
         expect(contents2.toString('hex').trim()).toBe('8885939396a696999384');
     });
 
+    it('can download variable length dataset with FileTransferType.RDW', async () => {
+        const dsname = 'IBMUSER.TEST.DS';  // input dataset name
+        const dssize = 75919;              // input dataset size in bytes
+        const contents2 = await accessor.downloadDataset(dsname, TransferMode.BINARY_RDW);
+        fs.writeFileSync('./file', contents2);
+        const stats = fs.statSync('./file')
+        const fileSizeInBytes = stats.size
+        expect(fileSizeInBytes).toEqual(dssize);
+    });
 });

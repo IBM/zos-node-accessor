@@ -19,6 +19,9 @@ const mockFtp4 = {
     ascii: jest.fn().mockImplementation((callback) => {
         callback(null);
     }),
+    binary: jest.fn().mockImplementation((callback) => {
+        callback(null);
+    }),
     delete: jest.fn(),
     end: jest.fn(),
     get: jest.fn(),
@@ -44,6 +47,7 @@ import { SpoolFile } from '../interfaces/SpoolFile';
 import { JobStatusResult, TransferMode, ZosAccessor } from '../zosAccessor';
 import { rawDatasetList } from './testInput';
 import { Stats } from 'fs';
+import { promises } from 'dns';
 
 const USERNAME = 'ADCDA';
 
@@ -56,6 +60,7 @@ describe('z/OS node accessor', () => {
     beforeEach(() => {
         client = new ZosAccessor();
         mockFtp4.ascii.mockClear();
+        mockFtp4.binary.mockClear();
         mockFtp4.site.mockClear();
         mockFtp4.put.mockClear();
         mockFtp4.get.mockClear();
@@ -429,6 +434,12 @@ describe('z/OS node accessor', () => {
         client.setMaxBufferSize(400);
         const s = await client.downloadDataset('dsn');
         expect(s.toString()).toBe('1234567890');
+    });
+
+    it.only('can download variable length dataset with RDW mode', async (done) => {
+            await client.downloadDataset('dsn', TransferMode.BINARY_RDW);
+            expect(mockFtp4.site).toBeCalledWith('rdw', expect.any(Function));
+        done();
     });
 
     it('can convert allocation parameter object to string', async () => {
