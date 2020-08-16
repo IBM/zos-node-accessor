@@ -78,6 +78,16 @@ export enum TransferMode {
      * The data is transferred in binary mode, in which no encoding conversion will happen.
      */
     BINARY = 'binary',
+
+    /**
+     * The data is transferred in rdw mode, in which variable length dataset downloading is available.
+     */
+    ASCII_RDW = 'ascii_rdw',
+
+    /**
+     * The data is transferred in rdw mode, in which variable length dataset downloading is available.
+     */
+    BINARY_RDW = 'binary_rdw',
 }
 
 /**
@@ -425,11 +435,12 @@ class ZosAccessor {
      * Downloads the specified dataset or member of patition dataset.
      *
      * @param dsn - Dataset name
-     * @param transferMode - TransferMode.ASCII, TransferMode.BINARY, or TransferMode.ASCII_STRIP_EOL.
-     *                       When downloading a text dataset, transferMode should be either `TransferMode.ASCII`
-     *                       or `TransferMode.ASCII_STRIP_EOL` so that z/OS FTP service converts `EBCDIC` characters
-     *                       to  `ASCII`. `TransferMode.ASCII_STRIP_EOL` asks z/OS FTP service not to append a `CLRF`
-     *                       to the end of each record.
+     * @param transferMode - TransferMode.ASCII, TransferMode.BINARY, TransferMode.ASCII_RDW, TransferMode.BINARY_RDW
+     *                       or TransferMode.ASCII_STRIP_EOL. When downloading a text dataset, transferMode should be
+     *                       either `TransferMode.ASCII` or `TransferMode.ASCII_STRIP_EOL` so that z/OS FTP service
+     *                       converts `EBCDIC` characters to `ASCII`. `TransferMode.ASCII_STRIP_EOL` asks z/OS FTP
+     *                       service not to append a `CLRF` to the end of each record. `TransferMode.ASCII_RDW` and
+     *                       `TransferMode.BINARY_RDW` support to download variable length dataset.
      * @param {boolean} stream - `true` if you want to obtain a `ReadStream` of the data set content, or `false`
      *                           to read a full dataset into memory (in Buffer). The buffer accepts up to 4MB data.
      *                           For large dataset, use `stream=true` instead.
@@ -437,6 +448,23 @@ class ZosAccessor {
      */
     public async downloadDataset(dsn: string, transferMode: TransferMode = TransferMode.ASCII,
                                  stream = false): Promise<Buffer | ReadStream> {
+        if (transferMode === TransferMode.ASCII_RDW || transferMode === TransferMode.BINARY_RDW) {
+            if (transferMode === TransferMode.ASCII_RDW) {
+                transferMode = TransferMode.ASCII;
+            } else {
+                transferMode = TransferMode.BINARY;
+            }
+            const deferred = Q.defer<Buffer | ReadStream>();
+            const ftpClient = this.client;
+            ftpClient.site('rdw', async (err: Error) => {
+                if (err) {
+                    return deferred.reject(err);
+                }
+                const file = await this.download(dsn, transferMode, stream);
+                deferred.resolve(file);
+            });
+            return deferred.promise;
+        }
         return await this.download(dsn, transferMode, stream);
     }
 
@@ -1113,3 +1141,4 @@ class ZosAccessor {
 export {
     ZosAccessor,
 };
+
