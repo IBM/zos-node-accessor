@@ -56,6 +56,7 @@ export interface JobStatus extends Job {
      * Job RC value, indicating job finished with numberic value or failed with error string.
      */
     rc?: string | number;
+
     /**
      * Job RC value, to support zftp plugin with consistent return code format with z/OSMF.
      */

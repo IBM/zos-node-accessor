@@ -440,7 +440,8 @@ class ZosAccessor {
      *                       either `TransferMode.ASCII` or `TransferMode.ASCII_STRIP_EOL` so that z/OS FTP service
      *                       converts `EBCDIC` characters to `ASCII`. `TransferMode.ASCII_STRIP_EOL` asks z/OS FTP
      *                       service not to append a `CLRF` to the end of each record. `TransferMode.ASCII_RDW` and
-     *                       `TransferMode.BINARY_RDW` support to download variable length dataset.
+     *                       `TransferMode.BINARY_RDW` support to download variable length dataset, which add 4-byte
+     *                       Record Description Word (RDW) at the beginning of each record.
      * @param {boolean} stream - `true` if you want to obtain a `ReadStream` of the data set content, or `false`
      *                           to read a full dataset into memory (in Buffer). The buffer accepts up to 4MB data.
      *                           For large dataset, use `stream=true` instead.
