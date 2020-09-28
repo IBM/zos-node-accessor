@@ -310,6 +310,7 @@ describe('Test cases for z/OS node accessor', function() {
             client.getJobStatus(submittedJobId).then(function (status) {
                 expect(status.spoolFiles.length).toBeGreaterThan(0);
                 expect(status.rc).toBe(0);
+                expect(status.retcode).toBe('RC 0000');
                 expect(status.jobid).toEqual(submittedJobId);
                 done();
             }).catch(function(err) {
@@ -329,6 +330,7 @@ describe('Test cases for z/OS node accessor', function() {
             client.getJobStatus('TSU18242').then(function (status) {
                 expect(status.spoolFiles.length).toBeGreaterThan(0);
                 expect(status.rc).toBe('ABEND=622');
+                expect(status.retcode).toBe('ABEND 622');
                 expect(status.jobid).toEqual('TSU18242');
                 done();
             }).catch(function(err) {
@@ -348,6 +350,7 @@ describe('Test cases for z/OS node accessor', function() {
             client.getJobStatus('JOB00256').then(function (status) {
                 expect(status.spoolFiles.length).toBeGreaterThan(0);
                 expect(status.rc).toBe('(JCL error)');
+                expect(status.retcode).toBe('JCL ERROR');
                 expect(status.jobid).toEqual('JOB00256');
                 done();
             }).catch(function(err) {
