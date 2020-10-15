@@ -31,6 +31,8 @@ var rawDatasetList, rawMemberList, rawUSSList, rawJobList;
 describe('Test cases for z/OS node accessor', function() {
     var client;
     var uploadDSN = 'DELETE.ME';
+    var site_stub;
+    var bufferStream = new stream.PassThrough();
 
     beforeEach(function() {
         client = new Client();
@@ -38,7 +40,7 @@ describe('Test cases for z/OS node accessor', function() {
             sinon.stub(client.client, 'connect');
             sinon.stub(client.client, 'ascii').callsArgWith(0, null);
             sinon.stub(client.client, 'binary').callsArgWith(0, null);
-            sinon.stub(client.client, 'site').callsArgWith(1, null);
+            site_stub = sinon.stub(client.client, 'site').callsArgWith(1, null, bufferStream);
             sinon.stub(client.client, 'on', function(arg, callback) {
                 callback(arg);
                 return client.client;
@@ -446,6 +448,19 @@ describe('Test cases for z/OS node accessor', function() {
             listStub && listStub.restore();
             getStub && getStub.restore();
         });
+    });
+
+    it('can download variable length dataset with RDW mode', async () => {
+
+        if(!TEST_ZOS) {
+            var bufferStream = new stream.PassThrough();
+            var stub= sinon.stub(client.client, 'get').callsArgWith(1, null, bufferStream);
+        return client.getDataset(uploadDSN, 'binary_rdw', true).then(function () {
+            site_stub && expect(site_stub.calledWithMatch(/.*rdw.*/)).toBeTruthy();
+        }).finally(function () {
+            stub && stub.restore();
+            site_stub && site_stub.restore();
+        });}
     });
 
     afterEach(function () {
