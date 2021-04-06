@@ -450,7 +450,7 @@ describe('Test cases for z/OS node accessor', function() {
         });
     });
 
-    it('can download variable length dataset with RDW mode', async () => {
+    it('can download variable length dataset with RDW mode', function() {
 
         if(!TEST_ZOS) {
             var bufferStream = new stream.PassThrough();
