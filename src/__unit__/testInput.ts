@@ -1,6 +1,6 @@
 /****************************************************************************/
 /*                                                                          */
-/* Copyright (c) 2017,2020 IBM Corp.                                        */
+/* Copyright (c) 2017, 2021 IBM Corp.                                       */
 /* All rights reserved. This program and the accompanying materials         */
 /* are made available under the terms of the Eclipse Public License v1.0    */
 /* which accompanies this distribution, and is available at                 */
@@ -59,4 +59,10 @@ export const rawDatasetList = [
     'F1DBAR 3390   2015/11/09  1   49  FB      80  3120  PS  WSIM.XMIT',
     'Migrated                                                CPPOBJS.OBJ',
     '250 List completed successfully.',
+];
+
+export const rawLoadLibMemberList = [ 
+    ' Name      Size     TTR   Alias-of AC --------- Attributes --------- Amode Rmode ',
+    'DD        03DBD8   031506 IRRENV00 01 FO             RN RU            31    24   ',
+    'DMOCI001  000710   03370C          00 FO                              31    ANY  ',
 ];

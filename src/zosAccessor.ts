@@ -1,6 +1,6 @@
 /****************************************************************************/
 /*                                                                          */
-/* Copyright (c) 2017, 2020 IBM Corp.                                       */
+/* Copyright (c) 2017, 2021 IBM Corp.                                       */
 /* All rights reserved. This program and the accompanying materials         */
 /* are made available under the terms of the Eclipse Public License v1.0    */
 /* which accompanies this distribution, and is available at                 */
@@ -26,6 +26,7 @@ import {
     parseDataSets,
     parseJobLine,
     parseJobList,
+    parseLoadLibPDSMembers,
     parsePDSMembers,
     parseSpoolTable,
     parseUSSDirList,
@@ -509,6 +510,8 @@ class ZosAccessor {
                         deferred.resolve(parseDataSets(list, this.migrationMode));
                     } else if (list[0].indexOf('Name') >= 0 && list[0].indexOf('Id') >= 0) {
                         deferred.resolve(parsePDSMembers(list, this.migrationMode));
+                    } else if (list[0].indexOf('Name') >= 0 && list[0].indexOf('Amode') >= 0) {
+                        deferred.resolve(parseLoadLibPDSMembers(list));
                     } else {
                         deferred.reject(new Error('Unrecognized file list header: ' + list[0]));
                     }

@@ -1,6 +1,6 @@
 /****************************************************************************/
 /*                                                                          */
-/* Copyright (c) 2017, 2020 IBM Corp.                                       */
+/* Copyright (c) 2017, 2021 IBM Corp.                                       */
 /* All rights reserved. This program and the accompanying materials         */
 /* are made available under the terms of the Eclipse Public License v1.0    */
 /* which accompanies this distribution, and is available at                 */
@@ -17,6 +17,7 @@ import { TransferMode, ZosAccessor } from '../zosAccessor';
 import {
     connectFTPServer,
     deleteDataset,
+    DSNAME_LOADLIB,
     getDatasetName,
     getDatasetNameWithMember,
     getRandomDatasetName,
@@ -122,4 +123,13 @@ describe('The method of listDatasets()', () => {
             expect(err.message).toBe(`Partitioned data set 'NOT.EXIST(*)' does not exist`);
         }
     });
+
+    it('can list members of PDS LoadLib dataset', async () => {
+        const list: DatasetMemberEntry[] = await accessor.listMembers(DSNAME_LOADLIB);
+        expect(list.length).toBeGreaterThan(0);
+        expect(list[0].name).toBeDefined(); 
+        expect(list[0].ac === 0 || list[0].ac === 1).toBeTruthy();
+        expect(list[0].amode === '24' || list[0].amode === '31' || list[0].amode === 'ANY').toBeTruthy();
+        expect(list[0].rmode === '24' || list[0].rmode === '31' || list[0].rmode === 'ANY').toBeTruthy();
+    });    
 });

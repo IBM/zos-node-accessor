@@ -1,6 +1,6 @@
 /****************************************************************************/
 /*                                                                          */
-/* Copyright (c) 2017, 2020 IBM Corp.                                       */
+/* Copyright (c) 2017, 2021 IBM Corp.                                       */
 /* All rights reserved. This program and the accompanying materials         */
 /* are made available under the terms of the Eclipse Public License v1.0    */
 /* which accompanies this distribution, and is available at                 */
@@ -38,6 +38,7 @@ export const USERNAME = settings.username.toUpperCase();
 const PASSWD = settings.password;
 const HOST = settings.host;
 const PORT = settings.port;
+export const DSNAME_LOADLIB = settings.dsname_loadlib;
 
 export async function connectFTPServer() {
 
