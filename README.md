@@ -601,6 +601,55 @@ connection.deleteJob('JOB25186')
   });
 ```
 
+#### Retrieve Server Status
+
+`stat(option)` - Retrieve status information from a remote server. The following parameters are accepted:
+
+##### Parameter
+
+* option - _string_ -  Optional option name like UMASK
+
+##### Return
+
+A promise that resolves status of the specified option on success, rejects on error. If `option` is not specified, 
+it returns all status information.
+
+##### Example
+
+```js
+connection.stat('UMASK')
+  .then(function(status) {
+    console.log(status);
+  })
+  .catch(function(err) {
+    // handle error
+  });
+```
+
+#### Submit SITE commands
+
+`site(siteCommands)` - Send site-specific information to a server. The following parameters are accepted:
+
+##### Parameter
+
+* siteCommands - _string_ - Site commands separated with space
+
+##### Return
+
+A promise that resolves text from server on success, rejects on error. 
+
+##### Example
+
+```js
+connection.site('UMASK=007')
+  .then(function(text) {
+    console.log(text);
+  })
+  .catch(function(err) {
+    // handle error
+  });
+```
+
 ## Module Long Term Support Policy
 
 This module adopts the [Module Long Term Support (LTS)](http://github.com/CloudNativeJS/ModuleLTS) policy, with the following End Of Life (EOL) dates:

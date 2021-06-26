@@ -46,7 +46,7 @@ describe('Test cases for z/OS node accessor', function() {
                 return client.client;
             });
         }
-        return client.connect({user: USERNAME, password: PASSWD, host: HOST});
+        return client.connect({user: USERNAME, password: PASSWD, host: HOST, port: PORT});
     });
 
     beforeEach(function () {
@@ -455,12 +455,32 @@ describe('Test cases for z/OS node accessor', function() {
         if(!TEST_ZOS) {
             var bufferStream = new stream.PassThrough();
             var stub= sinon.stub(client.client, 'get').callsArgWith(1, null, bufferStream);
-        return client.getDataset(uploadDSN, 'binary_rdw', true).then(function () {
-            site_stub && expect(site_stub.calledWithMatch(/.*rdw.*/)).toBeTruthy();
-        }).finally(function () {
-            stub && stub.restore();
-            site_stub && site_stub.restore();
-        });}
+            return client.getDataset(uploadDSN, 'binary_rdw', true).then(function () {
+                site_stub && expect(site_stub.calledWithMatch(/.*rdw.*/)).toBeTruthy();
+            }).finally(function () {
+                stub && stub.restore();
+                site_stub && site_stub.restore();
+            });
+        }
+    });
+
+    it('can submit stat commands without argument correctly', function(done) {
+        client.stat().then(function(result) {
+            expect(result).toContain('UMASK');
+            done();
+        });
+    });
+
+    it('can submit stat commands correctly', function(done) {
+        client.stat('umask').then(function(result) {
+            expect(result).not.toContain('000');
+            client.site('umask 000').then(function() {
+                client.stat('umask').then(function(result) {
+                    expect(result).toContain('000');
+                    done();
+                });
+            });
+        });
     });
 
     afterEach(function () {
