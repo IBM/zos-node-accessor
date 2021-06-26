@@ -10,13 +10,14 @@ interface FTP {
     destroy(): void;
     end(): void;
     get(path: string, arg1: (err: Error, readStream: import("fs").ReadStream) => void): void;
-    site(siteCommands: string, arg1: (err: Error) => void): void;
+    site(siteCommands: string, arg1: (err: Error, text?: string, code?: string) => void): void;
     list(path: string, arg1: (err: FtpError, list: string[]) => void): void;
     logout(callback: (err: Error) => void): void;
     mkdir(path: string, arg1: (err: Error) => void): void;
     on(arg0: string, arg1: () => void): import('net').Socket;
     put(input: string | Buffer | NodeJS.ReadableStream, destPath: string, arg2: (err: Error, text: string) => void): void;
     rename(oldPath: string, newPath: string, arg2: (err: Error) => void): void;
+    _send(command: string, arg1: (err: Error, text?: string, code?: string) => void): void;
 }
 
 interface FTPConnectionOption {

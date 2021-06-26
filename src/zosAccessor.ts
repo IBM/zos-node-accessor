@@ -219,7 +219,7 @@ class ZosAccessor {
      */
     public async close(): Promise<void> {
         const deferred = Q.defer<void>();
-        this.client.logout((err) => {
+        this.client.logout((err: Error) => {
             if (err) {
                 deferred.reject(err);
                 return;
@@ -227,6 +227,53 @@ class ZosAccessor {
             this.client.end();
             deferred.resolve();
         });
+        return deferred.promise;
+    }
+
+    /**
+     * Submits SITE commands.
+     * 
+     * @param siteCommands site commands separated with space
+     * @returns what's returned from server
+     */
+    public async site(siteCommands: string): Promise<string> {
+        const deferred = Q.defer<string>();
+        this.client.site(siteCommands, (err: Error, text?: string) => {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+            deferred.resolve(text);
+        })
+        return deferred.promise;
+    }
+
+    /**
+     * Submits STAT command to query server status.
+     * 
+     * @param option optional option. If not specified, query for all status.
+     * @returns what's returned from server
+     */
+    public async stat(option?: string): Promise<string> {
+        const command = option ? `stat (${option}` : 'stat'; 
+        return this.send(command);
+    }
+
+    /**
+     * Sends any command that FTP can understand with SEND.
+     * 
+     * @param command command to send
+     * @returns what's returned from server
+     */
+    public async send(command: string): Promise<string> {
+        const deferred = Q.defer<string>();
+        this.client._send(command, (err: Error, text?: string) => {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+            deferred.resolve(text);
+        })
         return deferred.promise;
     }
 
