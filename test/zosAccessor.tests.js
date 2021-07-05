@@ -1,6 +1,6 @@
 /****************************************************************************/
 /*                                                                          */
-/* Copyright (c) 2017 IBM Corp.                                             */
+/* Copyright (c) 2017, 2021 IBM Corp.                                       */
 /* All rights reserved. This program and the accompanying materials         */
 /* are made available under the terms of the Eclipse Public License v1.0    */
 /* which accompanies this distribution, and is available at                 */
@@ -463,6 +463,33 @@ describe('Test cases for z/OS node accessor', function() {
         });}
     });
 
+    it('can parse LoadLib PDS member list correctly', function() {
+        var rawLoadLibMemberList = [ 
+            ' Name      Size     TTR   Alias-of AC --------- Attributes --------- Amode Rmode ',
+            'DD        03DBD8   031506 IRRENV00 01 FO             RN RU            31    24   ',
+            'DMOCI001  000710   03370C          00 FO                              31    ANY  ',
+        ];
+
+        var datasetList = client.parseLoadLibPDSMembers(rawLoadLibMemberList);
+        expect(datasetList.length).toBe(2);
+        expect(datasetList[0].Name).toBe('DD');
+        expect(datasetList[0].Size).toBe('03DBD8');
+        expect(datasetList[0].TTR).toBe('031506');
+        expect(datasetList[0]['Alias-of']).toBe('IRRENV00');
+        expect(datasetList[0].AC).toBe('01');
+        expect(datasetList[0].Attributes).toBe('FO             RN RU');
+        expect(datasetList[0].Amode).toBe('31');
+        expect(datasetList[0].Rmode).toBe('24');
+        expect(datasetList[1].Name).toBe('DMOCI001');
+        expect(datasetList[1].Size).toBe('000710');
+        expect(datasetList[1].TTR).toBe('03370C');
+        expect(datasetList[1]['Alias-of']).toBe('');
+        expect(datasetList[1].AC).toBe('00');
+        expect(datasetList[1].Attributes).toBe('FO');
+        expect(datasetList[1].Amode).toBe('31');
+        expect(datasetList[1].Rmode).toBe('ANY');
+    });
+    
     afterEach(function () {
         client && client.close();
     })
