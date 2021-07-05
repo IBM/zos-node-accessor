@@ -1,6 +1,6 @@
 /****************************************************************************/
 /*                                                                          */
-/* Copyright (c) 2017,2020 IBM Corp.                                        */
+/* Copyright (c) 2017, 2021 IBM Corp.                                       */
 /* All rights reserved. This program and the accompanying materials         */
 /* are made available under the terms of the Eclipse Public License v1.0    */
 /* which accompanies this distribution, and is available at                 */
@@ -11,8 +11,8 @@
 /*                                                                          */
 /****************************************************************************/
 
-import { parseDataSets, parsePDSMembers } from '../parser';
-import { rawDatasetList } from './testInput';
+import { parseDataSets, parseLoadLibPDSMembers, parsePDSMembers } from '../parser';
+import { rawDatasetList, rawLoadLibMemberList } from './testInput';
 
 describe('z/OS node accessor Parser', () => {
 
@@ -32,6 +32,27 @@ describe('z/OS node accessor Parser', () => {
         const datasetList = parsePDSMembers(rawMemberList, false);
         expect(datasetList.length).toBe(2);
         expect(datasetList[0].changed).toBe('2018/09/07 03:52');
+    });
+
+    it('can parse LoadLib PDS member list correctly', () => {
+        const datasetList = parseLoadLibPDSMembers(rawLoadLibMemberList);
+        expect(datasetList.length).toBe(2);
+        expect(datasetList[0].name).toBe('DD');
+        expect(datasetList[0].size).toBe(252888);
+        expect(datasetList[0].ttr).toBe('031506');
+        expect(datasetList[0].aliasOf).toBe('IRRENV00');
+        expect(datasetList[0].ac).toBe(1);
+        expect(datasetList[0].attributes).toBe('FO             RN RU');
+        expect(datasetList[0].amode).toBe('31');
+        expect(datasetList[0].rmode).toBe('24');
+        expect(datasetList[1].name).toBe('DMOCI001');
+        expect(datasetList[1].size).toBe(1808);
+        expect(datasetList[1].ttr).toBe('03370C');
+        expect(datasetList[1].aliasOf).toBe('');
+        expect(datasetList[1].ac).toBe(0);
+        expect(datasetList[1].attributes).toBe('FO');
+        expect(datasetList[1].amode).toBe('31');
+        expect(datasetList[1].rmode).toBe('ANY');
     });
 
     it('can parse MVS data set list without space padding correctly', () => {

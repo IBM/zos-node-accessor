@@ -14,9 +14,94 @@
 import { DatasetEntry } from './interfaces/DatasetEntry';
 import { DatasetMemberEntry } from './interfaces/DatasetMemberEntry';
 import { Job } from './interfaces/Job';
+import { LoadLibMemberEntry } from './interfaces/LoadLibMemberEntry';
 import { SpoolFile } from './interfaces/SpoolFile';
 import { FileType, USSEntry } from './interfaces/USSEntry';
 import { Utils } from './utils';
+
+
+interface Position {
+    header: string;
+    start: number;
+    end: number;
+}
+
+/**
+ * Parse the header line for the individual headers and their position. For example:
+ * 
+ * <pre>
+ * ' Name      Size     TTR   Alias-of AC'
+ * </pre>
+ * 
+ * It splits headerLine by spaces, and outputs positions as follows;
+ * 
+ * <pre>
+ *   [{
+ *     header: 'Name';
+ *     start: 1;
+ *     end: 5;
+ *   }, ...]
+ * </pre>
+ *
+ * @param headerLine input header line
+ * @param base adjust the base position for start/end
+ * @returns position array
+ */
+function parseHeader(headerLine: string, base = 0): Position[] {
+    const headers = headerLine.split(/\s+/);
+    const positions: Position[] = [];
+    let lastPosition = 0;
+    headers.forEach((header) => {
+        // No header is substring of another header.
+        const position = { 
+            header: header,
+            start: base + headerLine.indexOf(header),
+            end: base + headerLine.indexOf(header) + header.length
+        };
+        positions.push(position);
+        lastPosition = position.end;
+    });
+    return positions;
+}
+
+/**
+ * Parses the field line based the information from position. For example:
+ * 
+ * <pre>
+ * ' Name      Size     TTR   Alias-of AC ',
+ * 'DD        03DBD8   031506 IRRENV00 01 '
+ * </pre>
+ * 
+ * To parse the first field of 'Name'. It locates the field with header position, which is 'D    '.
+ * Then it searches for ' ' backwards and forwards to determine the actual field string, which is 'DD    '.
+ * Finally returns the trimmed string of 'DD'.
+ * 
+ * Take 'Size' as another example, The field located with header position is '3DBD', which is directly
+ * under 'Size'. Then it searches for ' ' backwards/forwards and gets '03DBD8'.
+ * 
+ * Note: It would not work if no ' ' between two fields, which is handled in `parseDataSets()`
+ * 
+ * @param line field line to parse
+ * @param position position of header
+ * @returns the trimmed field string
+ */
+function parseField(line: string, position: Position): string {
+    let start = position.start;
+    while (start >= 0) {
+        if (line[start] === ' ') {
+            break;
+        }
+        start --;
+    }
+    let end = position.end;
+    while (end < line.length) {
+        if (line[end] === ' ') {
+            break;
+        }
+        end ++;
+    }
+    return line.substring(start, end).trim();
+}
 
 /**
  * Parse a list of dataset list strings.
@@ -43,16 +128,16 @@ export function parseDataSets(lines: string[], migrationMode: boolean): DatasetE
     // 'XRFS61 3390   2017/08/04  1 4500  FB    1024 27648  PS  \'USERHLQI.T3.HISPAXZ\'',
     // 'XRFS67 3390   2017/08/04  314760  FB    1024 27648  PS  \'USERHLQI.T4.HISPAXZ\''
 
-    interface Position {
-        start: number;
-        end: number;
-    }
     const headers = headLine.split(/\s+/);
     const positions: Position[] = [];
     let lastPosition = 0;
     headers.forEach((header) => {
         // No header is substring of another header.
-        const position = { start: lastPosition, end: headLine.indexOf(header) + header.length };
+        const position = { 
+            header: header,
+            start: lastPosition, 
+            end: headLine.indexOf(header) + header.length
+        };
         positions.push(position);
         lastPosition = position.end;
     });
@@ -203,6 +288,64 @@ export function parsePDSMembers(lines: string[], migrationMode: boolean): Datase
                 case 'INIT':
                 case 'MOD':
                 case 'ID':
+                    break;
+            }
+        }
+        entries.push(entry);
+    });
+    return entries;
+}
+
+export function parseLoadLibPDSMembers(lines: string[]): LoadLibMemberEntry[] {
+    if (lines.length === 0) {
+        return [];
+    }
+
+    const headLine = lines.shift() || '';
+    const ATTRIBUTES_HEADER = '--------- Attributes ---------';
+    const posn1 = headLine.indexOf(ATTRIBUTES_HEADER);
+    const posn2 = posn1 + ATTRIBUTES_HEADER.length;
+    const header1 = headLine.substring(0, posn1).trim();
+    const header3 = headLine.substring(posn2).trim();
+    let positions = parseHeader(header1);
+    positions.push({
+        header: 'ATTRIBUTES',
+        start: posn1,
+        end: posn2
+    });
+    positions = positions.concat(parseHeader(header3, posn2));
+
+    const entries: LoadLibMemberEntry[] = [];
+    lines.forEach((line) => {
+        const entry: LoadLibMemberEntry = {rawString: line, fieldNames: [], name: ''};
+        for (let i = 0; i < positions.length; ++i) {
+            entry.fieldNames.push(positions[i].header);
+            const field = parseField(line, positions[i]);
+            
+            switch (positions[i].header.toUpperCase()) {
+                case 'NAME':
+                    entry.name = field;
+                    break;
+                case 'SIZE':
+                    entry.size = parseInt(field, 16);
+                    break;
+                case 'TTR':
+                    entry.ttr = field;
+                    break;
+                case 'ALIAS-OF':
+                    entry.aliasOf = field;
+                    break;
+                case 'AC':
+                    entry.ac = parseInt(field, 10);
+                    break;
+                case 'ATTRIBUTES':
+                    entry.attributes = field;
+                    break;
+                case 'AMODE':
+                    entry.amode = field;
+                    break;
+                case 'RMODE':
+                    entry.rmode = field;
                     break;
             }
         }

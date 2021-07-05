@@ -4,5 +4,6 @@
     "username": "username",
     "password": "password",
     "dsname_rdw": "dataset name for the testing dataset downloading with rdw",
-    "dssize_rdw": "dataset size in bytes for the testing dataset downloading with rdw"
+    "dssize_rdw": "dataset size in bytes for the testing dataset downloading with rdw",
+    "dsname_loadlib": "dataset name to test listing member of loadlib pds"
 }
