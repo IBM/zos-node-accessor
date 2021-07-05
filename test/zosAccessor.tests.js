@@ -471,13 +471,16 @@ describe('Test cases for z/OS node accessor', function() {
         });
     });
 
-    it('can submit stat commands correctly', function(done) {
-        client.stat('umask').then(function(result) {
-            expect(result).not.toContain('000');
-            client.site('umask 000').then(function() {
-                client.stat('umask').then(function(result) {
-                    expect(result).toContain('000');
-                    done();
+    it('can submit stat/site commands correctly', function(done) {
+        client.stat('SBSENDEOL').then(function(result) {
+            expect(result).not.toContain(' LF ');
+            client.site('UMASK 007 SBSENDEOL=LF').then(function(text) {
+                client.stat('SBSENDEOL').then(function(result) {
+                    expect(result).toContain(' LF ');
+                    client.stat('UMASK').then(function(result) {
+                        expect(result).toContain('007');
+                        done();
+                    });
                 });
             });
         });
