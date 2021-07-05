@@ -592,7 +592,7 @@ SpoolFile
 ##### Example
 
 ```ts
-const jobStatus = await = connection.getJobStatus(jobId);
+const jobStatus = await connection.getJobStatus(jobId);
 ```
 
 #### Get JES spool files
@@ -663,14 +663,9 @@ it returns all status information.
 
 ##### Example
 
-```js
-connection.stat('UMASK')
-  .then(function(status) {
-    console.log(status);
-  })
-  .catch(function(err) {
-    // handle error
-  });
+```ts
+const status = await connection.stat('UMASK');
+console.log(status);
 ```
 
 #### Submit SITE commands
@@ -688,13 +683,7 @@ A promise that resolves text from server on success, rejects on error.
 ##### Example
 
 ```js
-connection.site('UMASK=007')
-  .then(function(text) {
-    console.log(text);
-  })
-  .catch(function(err) {
-    // handle error
-  });
+await connection.site('UMASK=007');
 ```
 
 ## Module Long Term Support Policy
