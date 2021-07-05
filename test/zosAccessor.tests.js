@@ -486,6 +486,13 @@ describe('Test cases for z/OS node accessor', function() {
         });
     });
 
+    it('can return proper error message with bad syntax site command', function(done) {
+        client.site('UMASK=007').then(function(text) {
+            expect(text).toContain('Umask invalid syntax');
+            done();
+        });
+    });
+
     afterEach(function () {
         client && client.close();
     })
