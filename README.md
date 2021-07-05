@@ -74,6 +74,9 @@ This accessor leverages z/OS FTP server to interact with z/OS. To work with z/OS
   * [Get job status](#get-job-status)
   * [Get JES spool files](#get-jes-spool-files)
   * [Delete job](#delete-job)
+* [Others](#others)
+  * [Retrieve Server Status](#retrieve-server-status)
+  * [Submit SITE commands](#submit-site-commands)
 
 ### Connection
 
@@ -648,6 +651,8 @@ A promise that resolves on success, rejects on error.
 await connection.deleteJob({ jobId: 'JOB25186' });
 ```
 
+### Others
+
 #### Retrieve Server Status
 
 `stat(option)` - Retrieve status information from a remote server. The following parameters are accepted:
@@ -683,7 +688,7 @@ A promise that resolves text from server on success, rejects on error.
 ##### Example
 
 ```js
-await connection.site('UMASK=007');
+await connection.site('UMASK 007');
 ```
 
 ## Module Long Term Support Policy

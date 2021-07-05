@@ -33,12 +33,17 @@ describe('The method of stat()', () => {
         expect(result).toContain('UMASK');
     });
 
-    it('can submit stat commands correctly', async () => {
+    it('can submit stat/site commands correctly', async () => {
         let result = await accessor.stat('umask');
         expect(result).not.toContain('000');
 
-        await accessor.site('umask 000');
+        result = await accessor.stat('SBSENDEOL');
+        expect(result).not.toContain(' LF ');
+
+        await accessor.site('umask 000 SBSENDEOL=LF');
         result = await accessor.stat('umask');
         expect(result).toContain('000');
+        result = await accessor.stat('SBSENDEOL');
+        expect(result).toContain('LF');
     });
 });

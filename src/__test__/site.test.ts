@@ -36,4 +36,9 @@ describe('The method of site()', () => {
         result = await accessor.stat('umask');
         expect(result).toContain('000');
     });
+
+    it('can return proper error message with bad syntax site command', async() => {
+        const result = await accessor.site('umask=000');
+        expect(result).toContain('Umask invalid syntax');
+    });    
 });
