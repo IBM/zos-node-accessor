@@ -50,6 +50,9 @@ This accessor leverages z/OS FTP server to interact with z/OS, it requires `JESI
   * [Get job status](#get-job-status)
   * [Get JES spool files](#get-jes-spool-files)
   * [Delete job](#delete-job)
+* [Others](#others)
+  * [Retrieve Server Status](#retrieve-server-status)
+  * [Submit SITE commands](#submit-site-commands)
 
 ### Connection
 
@@ -601,6 +604,8 @@ connection.deleteJob('JOB25186')
   });
 ```
 
+### Others
+
 #### Retrieve Server Status
 
 `stat(option)` - Retrieve status information from a remote server. The following parameters are accepted:
@@ -641,7 +646,7 @@ A promise that resolves text from server on success, rejects on error.
 ##### Example
 
 ```js
-connection.site('UMASK=007')
+connection.site('UMASK 007')
   .then(function(text) {
     console.log(text);
   })
