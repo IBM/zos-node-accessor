@@ -77,7 +77,7 @@ function parseHeader(headerLine: string, base = 0): Position[] {
  * Finally returns the trimmed string of 'DD'.
  * 
  * Take 'Size' as another example, The field located with header position is '3DBD', which is directly
- * under 'Size'. Then it searches for ' ' backwards/forwards and gets '02DBD8'.
+ * under 'Size'. Then it searches for ' ' backwards/forwards and gets '03DBD8'.
  * 
  * Note: It would not work if no ' ' between two fields, which is handled in `parseDataSets()`
  * 
