@@ -74,6 +74,9 @@ This accessor leverages z/OS FTP server to interact with z/OS. To work with z/OS
   * [Get job status](#get-job-status)
   * [Get JES spool files](#get-jes-spool-files)
   * [Delete job](#delete-job)
+* [Others](#others)
+  * [Retrieve Server Status](#retrieve-server-status)
+  * [Submit SITE commands](#submit-site-commands)
 
 ### Connection
 
@@ -592,7 +595,7 @@ SpoolFile
 ##### Example
 
 ```ts
-const jobStatus = await = connection.getJobStatus(jobId);
+const jobStatus = await connection.getJobStatus(jobId);
 ```
 
 #### Get JES spool files
@@ -646,6 +649,46 @@ A promise that resolves on success, rejects on error.
 
 ```ts
 await connection.deleteJob({ jobId: 'JOB25186' });
+```
+
+### Others
+
+#### Retrieve Server Status
+
+`stat(option)` - Retrieve status information from a remote server. The following parameters are accepted:
+
+##### Parameter
+
+* option - _string_ -  Optional option name like UMASK
+
+##### Return
+
+A promise that resolves status of the specified option on success, rejects on error. If `option` is not specified, 
+it returns all status information.
+
+##### Example
+
+```ts
+const status = await connection.stat('UMASK');
+console.log(status);
+```
+
+#### Submit SITE commands
+
+`site(siteCommands)` - Send site-specific information to a server. The following parameters are accepted:
+
+##### Parameter
+
+* siteCommands - _string_ - Site commands separated with space
+
+##### Return
+
+A promise that resolves text from server on success, rejects on error. 
+
+##### Example
+
+```js
+await connection.site('UMASK 007');
 ```
 
 ## Module Long Term Support Policy
