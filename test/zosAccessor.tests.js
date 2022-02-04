@@ -26,7 +26,7 @@ if(!TEST_ZOS) {
     console.info('Using a mocked z/OS FTP server');
 }
 
-var rawDatasetList, rawMemberList, rawUSSList, rawJobList;
+var rawDatasetList, rawUSSList2, rawUSSList3, rawMemberList, rawUSSList, rawJobList;
 
 describe('Test cases for z/OS node accessor', function() {
     var client;
@@ -55,7 +55,17 @@ describe('Test cases for z/OS node accessor', function() {
             'lrwxrwxrwx     1 CLASGEN  GRP2611        9 Jul 13 19:13 $SYSNAME -> $SYSNAME/',
             'lrwxrwxrwx     1 CLASGEN  GRP2611        9 Jul 13 19:13 $VERSION -> $VERSION/',
             'drwxr-xr-x    10 CLASGEN  DEFLT1      8192 Jul 13 18:52 CEC3',
-            '-rwx------     1 CLASGEN  GRP2611     1749 Aug 25  2004 DetailMerge'
+            '-rwx------     1 CLASGEN  GRP2611     1749 Aug 25  2004 DetailMerge',
+            'lrwxrwxrwx     1 LIANGQI  DEFLT1         3 Oct 25 20:35 zzz -> man',
+            'lrwxrwxrwx     1 LIANGQI  DEFLT1         1 Nov  7 20:35 zzz2 -> /',
+            'drwx------     2 LIANGQI  DEFLT1      8192 Nov  7 20:12 zzz3',
+        ];
+        rawUSSList2 = [
+            'lrwxrwxrwx   1 LIANGQI  DEFLT1         1 Nov  7 20:35 zzz2 -> /'
+        ];
+        rawUSSList3 = [
+            'total 554',
+            'lrwxrwxrax   1 LIANGQI  DEFLT1         1 Nov  7 20:35 badline'
         ];
 
         rawDatasetList = [
@@ -169,7 +179,30 @@ describe('Test cases for z/OS node accessor', function() {
             var stub = sinon.stub(client.client, 'list').callsArgWith(1, null, rawUSSList);
         }
         return client.listDataset('/').then(function (list) {
-            expect(list.length).toBeGreaterThan(1);
+            expect(list.length).toBe(7);
+        }).finally(function () {
+            stub && stub.restore();
+        });
+    });
+
+    it('can list file of USS', function() {
+        if(!TEST_ZOS) {
+            var stub = sinon.stub(client.client, 'list').callsArgWith(1, null, rawUSSList2);
+        }
+        return client.listDataset('/any').then(function (list) {
+            expect(list.length).toBe(1);
+            expect(list[0].name).toBe('zzz2 -> /');
+        }).finally(function () {
+            stub && stub.restore();
+        });
+    });
+
+    it('can ignore bad lines when listing USS files', function() {
+        if(!TEST_ZOS) {
+            var stub = sinon.stub(client.client, 'list').callsArgWith(1, null, rawUSSList3);
+        }
+        return client.listDataset('/any').then(function (list) {
+            expect(list.length).toBe(0);
         }).finally(function () {
             stub && stub.restore();
         });
@@ -366,7 +399,7 @@ describe('Test cases for z/OS node accessor', function() {
     it('can get job log', function(done) {
         if(!TEST_ZOS) {
             var bufferStream = new stream.PassThrough();
-            bufferStream.end(new Buffer('MINUTES EXECUTION TIME\n!! END OF JES SPOOL FILE !!AAA\n!! END OF JES SPOOL FILE !!'));
+            bufferStream.end(Buffer.from('MINUTES EXECUTION TIME\n!! END OF JES SPOOL FILE !!AAA\n!! END OF JES SPOOL FILE !!'));
             var getStub = sinon.stub(client.client, 'get').callsArgWith(1, null, bufferStream);
             var listStub = sinon.stub(client.client, 'list').callsArgWith(1, null, jobStatusResp.split('\n'));
         }
@@ -439,7 +472,7 @@ describe('Test cases for z/OS node accessor', function() {
         if(!TEST_ZOS) {
             var listStub = sinon.stub(client.client, 'list').callsArgWith(1, null, jobStatusResp.split('\n'));
             var bufferStream = new stream.PassThrough();
-            bufferStream.end(new Buffer(rawJCLMSGLG.join('\n')));
+            bufferStream.end(Buffer.from(rawJCLMSGLG.join('\n')));
             var getStub = sinon.stub(client.client, 'get').callsArgWith(1, null, bufferStream);
         }
         return client.getRCFromJESMSGLG({jobName: 'jobName', jobId: 'jobId'}).then(function (rc) {
@@ -462,35 +495,6 @@ describe('Test cases for z/OS node accessor', function() {
                 site_stub && site_stub.restore();
             });
         }
-    });
-
-    it('can submit stat commands without argument correctly', function(done) {
-        client.stat().then(function(result) {
-            expect(result).toContain('UMASK');
-            done();
-        });
-    });
-
-    it('can submit stat/site commands correctly', function(done) {
-        client.stat('SBSENDEOL').then(function(result) {
-            expect(result).not.toContain(' LF ');
-            client.site('UMASK 007 SBSENDEOL=LF').then(function(text) {
-                client.stat('SBSENDEOL').then(function(result) {
-                    expect(result).toContain(' LF ');
-                    client.stat('UMASK').then(function(result) {
-                        expect(result).toContain('007');
-                        done();
-                    });
-                });
-            });
-        });
-    });
-
-    it('can return proper error message with bad syntax site command', function(done) {
-        client.site('UMASK=007').then(function(text) {
-            expect(text).toContain('Umask invalid syntax');
-            done();
-        });
     });
 
     it('can parse LoadLib PDS member list correctly', function() {

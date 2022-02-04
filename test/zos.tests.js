@@ -291,6 +291,35 @@ describe('Integration test cases for z/OS node accessor', function() {
             });
     });
 
+    it('can submit stat commands without argument correctly', function(done) {
+        _client.stat().then(function(result) {
+            expect(result).toContain('UMASK');
+            done();
+        });
+    });
+
+    it('can submit stat/site commands correctly', function(done) {
+        _client.stat('SBSENDEOL').then(function(result) {
+            expect(result).not.toContain(' LF ');
+            _client.site('UMASK 007 SBSENDEOL=LF').then(function(text) {
+                _client.stat('SBSENDEOL').then(function(result) {
+                    expect(result).toContain(' LF ');
+                    _client.stat('UMASK').then(function(result) {
+                        expect(result).toContain('007');
+                        done();
+                    });
+                });
+            });
+        });
+    });
+
+    it('can return proper error message with bad syntax site command', function(done) {
+        _client.site('UMASK=007').then(function(text) {
+            expect(text).toContain('Umask invalid syntax');
+            done();
+        });
+    });
+
     function getUSSPath(path) {
         return `/u/${USERNAME.toLowerCase()}/${path}`;
     }

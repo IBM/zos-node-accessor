@@ -2,3 +2,4 @@ coverage/
 node_modules/
 .idea/
 .vscode/
+test/customSettings.json
