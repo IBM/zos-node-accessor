@@ -165,7 +165,7 @@ describe('Test cases for the object parameter of', function() {
         beforeEach(function() {
             if(!TEST_ZOS) {
                 var bufferStream = new stream.PassThrough();
-                bufferStream.end(new Buffer('MINUTES EXECUTION TIME\n!! END OF JES SPOOL FILE !!AAA\n!! END OF JES SPOOL FILE !!'));
+                bufferStream.end(Buffer.from('MINUTES EXECUTION TIME\n!! END OF JES SPOOL FILE !!AAA\n!! END OF JES SPOOL FILE !!'));
                 getStub = sinon.stub(client.client, 'get').callsArgWith(1, null, bufferStream);
             }
         });
