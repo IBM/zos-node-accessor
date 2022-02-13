@@ -70,8 +70,8 @@ describe('The method of listFiles()', () => {
 
     // This case requires the following links on USS file system.
     // ```
-    // symbolic.txt -> hello.txt
-    // symbolic -> empty
+    // symbolic.txt -> /<uss-path-root>/hello.txt   (file)
+    // symbolic     -> /<uss-path-root>/empty       (dir)
     // ```
     it('can list symbol links, except the hidden ones', async () => {
         const list: USSEntry[] = await accessor.listFiles(getUSSPathRoot());

@@ -30,6 +30,7 @@ import {
     parsePDSMembers,
     parseSpoolTable,
     parseUSSDirList,
+    USS_FILE_MODES_REX,
 } from './parser';
 import { Utils } from './utils';
 
@@ -552,6 +553,7 @@ class ZosAccessor {
                     }
                 } else {
                     if (list[0].match(/^total/)) {
+                        list.shift();  // Pop header
                         deferred.resolve(parseUSSDirList(list, this.migrationMode));
                     } else if (list[0].indexOf('Volume') >= 0 && list[0].indexOf('Dsname') >= 0) {
                         deferred.resolve(parseDataSets(list, this.migrationMode));
@@ -559,6 +561,17 @@ class ZosAccessor {
                         deferred.resolve(parsePDSMembers(list, this.migrationMode));
                     } else if (list[0].indexOf('Name') >= 0 && list[0].indexOf('Amode') >= 0) {
                         deferred.resolve(parseLoadLibPDSMembers(list));
+                    } else if (list[0].indexOf(' ') !== -1) {
+                        // The following line is returned when listing a regular file or symbolic link.
+                        // lrwxrwxrwx   1 USER  GROUP         12 Jul 13  2017 /tmp -> $SYSNAME/tmp
+                        // -rw-------   1 USER  GROUP    2152185 Nov  7 20:40 /tmp/abc.txt
+                        var items = list[0].split(' ');
+                        if (USS_FILE_MODES_REX.test(items[0])) {
+                            // The first item must contain the char symbol of file mode, dir, link only.
+                            deferred.resolve(parseUSSDirList(list, this.migrationMode));
+                        } else {
+                            deferred.resolve([]);
+                        }
                     } else {
                         deferred.reject(new Error('Unrecognized file list header: ' + list[0]));
                     }

@@ -19,6 +19,7 @@ import { SpoolFile } from './interfaces/SpoolFile';
 import { FileType, USSEntry } from './interfaces/USSEntry';
 import { Utils } from './utils';
 
+export const USS_FILE_MODES_REX = /^[dlrwx\-]+$/;
 
 interface Position {
     header: string;
@@ -362,11 +363,15 @@ export function parseLoadLibPDSMembers(lines: string[]): LoadLibMemberEntry[] {
  * @returns USS file entries
  */
 export function parseUSSDirList(lines: string[], migrationMode: boolean): USSEntry[] {
-    lines.shift();  // Pop header
     const monthText = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const headers = ['permissions', 'links', 'owner', 'group', 'size'];
     const entries: USSEntry[] = [];
     lines.forEach((line) => {
+        const item = line.substring(0, 'lrwxrwxrwx'.length);
+        if (!USS_FILE_MODES_REX.test(item)) {
+            return;
+        }
+
         const entry: USSEntry = {
             fieldNames: [],
             fileType: FileType.FILE,
