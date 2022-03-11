@@ -11,8 +11,16 @@
 /*                                                                          */
 /****************************************************************************/
 
-import { parseDataSets, parseLoadLibPDSMembers, parsePDSMembers } from '../parser';
-import { rawDatasetList, rawLoadLibMemberList } from './testInput';
+import { USSEntry } from '../interfaces/USSEntry';
+import { parseDataSets, parseLoadLibPDSMembers, parsePDSMembers, parseUSSDirList } from '../parser';
+import { rawDatasetList, rawLoadLibMemberList, rawUSSList, rawUSSList2, rawUSSList3 } from './testInput';
+
+function removeDate(fileList: USSEntry[]): void {
+    fileList.forEach(file => {
+        expect(file['lastModified']).toBeDefined();
+        file['lastModified'] = new Date(0);
+    });
+}
 
 describe('z/OS node accessor Parser', () => {
 
@@ -78,4 +86,26 @@ describe('z/OS node accessor Parser', () => {
         expect(datasetList[1].dsOrg).toBe('PS');
         expect(datasetList[1].name).toBe('USERHLQI.T2.HISPAXZ');
     });
+
+    it('can list file of USS', () => {
+        const fileList = parseUSSDirList(rawUSSList, false);
+        expect(fileList.length).toBe(7);
+        removeDate(fileList);
+        expect(fileList).toMatchSnapshot();
+    });
+
+    it('can list symbolic link file of USS', () => {
+        const fileList = parseUSSDirList(rawUSSList2, false);
+        expect(fileList.length).toBe(1);
+        expect(fileList[0].name).toBe('zzz2');
+        expect(fileList[0].linkTo).toBe('/');
+        removeDate(fileList);
+        expect(fileList).toMatchSnapshot();
+    });
+
+    it('can ignore bad lines when listing USS files', () => {
+        const fileList = parseUSSDirList(rawUSSList3, false);
+        expect(fileList.length).toBe(0);
+    });
+
 });

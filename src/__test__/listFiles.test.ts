@@ -70,8 +70,8 @@ describe('The method of listFiles()', () => {
 
     // This case requires the following links on USS file system.
     // ```
-    // symbolic.txt -> hello.txt
-    // symbolic -> empty
+    // symbolic.txt -> /<uss-path-root>/hello.txt   (file)
+    // symbolic     -> /<uss-path-root>/empty       (dir)
     // ```
     it('can list symbol links, except the hidden ones', async () => {
         const list: USSEntry[] = await accessor.listFiles(getUSSPathRoot());
@@ -110,4 +110,13 @@ describe('The method of listFiles()', () => {
         }
     });
 
+    it('can list file with invalid character', async () => {
+        const ussPath = getRandomUSSPath(baseDir);
+        await accessor.makeDirectory(ussPath + '\nNewLine');
+        const list = await accessor.listFiles(baseDir);
+        const posn = ussPath.lastIndexOf('/');
+        const fileName = ussPath.substring(posn + 1);
+        expect(list.length).toBe(1);
+        expect(list[0].name).toBe(fileName);
+    });
 });

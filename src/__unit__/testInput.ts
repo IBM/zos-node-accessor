@@ -66,3 +66,21 @@ export const rawLoadLibMemberList = [
     'DD        03DBD8   031506 IRRENV00 01 FO             RN RU            31    24   ',
     'DMOCI001  000710   03370C          00 FO                              31    ANY  ',
 ];
+
+export const rawUSSList = [
+    'total 554',
+    'lrwxrwxrwx     1 CLASGEN  GRP2611        9 Jul 13 19:13 $SYSNAME -> $SYSNAME/',
+    'lrwxrwxrwx     1 CLASGEN  GRP2611        9 Jul 13 19:13 $VERSION -> $VERSION/',
+    'drwxr-xr-x    10 CLASGEN  DEFLT1      8192 Jul 13 18:52 CEC3',
+    '-rwx------     1 CLASGEN  GRP2611     1749 Aug 25  2004 DetailMerge',
+    'lrwxrwxrwx     1 LIANGQI  DEFLT1         3 Oct 25 20:35 zzz -> man',
+    'lrwxrwxrwx     1 LIANGQI  DEFLT1         1 Nov  7 20:35 zzz2 -> /',
+    'drwx------     2 LIANGQI  DEFLT1      8192 Nov  7 20:12 zzz3',
+];
+export const rawUSSList2 = [
+    'lrwxrwxrwx   1 LIANGQI  DEFLT1         1 Nov  7 20:35 zzz2 -> /'
+];
+export const rawUSSList3 = [
+    'total 554',
+    'lrwxrwxrax   1 LIANGQI  DEFLT1         1 Nov  7 20:35 badline'
+];
