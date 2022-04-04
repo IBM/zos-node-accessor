@@ -12,7 +12,7 @@
 /****************************************************************************/
 
 import { FileToOperate, ZosAccessor } from '../zosAccessor';
-import { connectFTPServer, deleteDirectory, getNameFromUSSPath, getRandomUSSPath, getUSSPath } from './testUtils';
+import { connectFTPServer, deleteDirectory, getNameFromUSSPath, getRandomUSSPath, getUSSPathRoot } from './testUtils';
 
 let dir: string;
 
@@ -98,7 +98,7 @@ describe('The method of deleteFile()', () => {
 
     it('can throw an error when the directory is permission denied', async () => {
         try {
-            await accessor.deleteFile(getUSSPath('../ibmuser/test1'));
+            await accessor.deleteFile(getUSSPathRoot() + '/no_permission'); // File mode: 000
         } catch (err) {
             expect(err.toString().search('Rc = 111')).not.toBe(-1);
         }

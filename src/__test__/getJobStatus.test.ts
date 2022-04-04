@@ -40,8 +40,11 @@ describe('The method of getJobStatus()', () => {
         expect(status.status).toBe('OUTPUT');
         expect(status.class).toBe('A');
         expect(status.extra).toBe('RC=0000');
-        expect(status.spoolFiles?.length).toBe(5);
-        const spoolFiles = status.spoolFiles as SpoolFile[];
+
+        const queryStatus: JobIdOption = { jobId: status.jobId };
+        const jobStatus = await accessor.getJobStatus(queryStatus);
+        expect(jobStatus.spoolFiles?.length).toBe(5);
+        const spoolFiles = jobStatus.spoolFiles as SpoolFile[];
         expect(spoolFiles[0].id).toBe(1);
         expect(spoolFiles[0].stepName).toBe('JES2');
         expect(spoolFiles[0].class).toBe('H');

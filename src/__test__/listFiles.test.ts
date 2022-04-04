@@ -95,7 +95,7 @@ describe('The method of listFiles()', () => {
 
     it('can throw an error for permission denied', async () => {
         try {
-            await accessor.listFiles(getUSSPath('../ibmuser/test1'));
+            await accessor.listFiles(getUSSPathRoot() + '/no_permission_dir'); // File mode: 000
         } catch (err) {
             expect(err.toString().search('EDC5111I Permission denied.')).not.toBe(-1);
         }

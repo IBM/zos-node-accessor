@@ -81,6 +81,7 @@ export function getHelloJcl(): JobNameAndJCL {
 export async function submitHelloJob(client: ZosAccessor) {
     const { jobName, jcl } = getHelloJcl();
     const jobId = await client.submitJCL(jcl);
+    await sleep(5000);
     const queryStatus: JobIdOption = { jobId };
     let status = await client.getJobStatus(queryStatus);
     while (status.rc !== 0) {
@@ -177,7 +178,7 @@ export class BufferStream extends Writable {
 
     private buffers: Buffer[] = [];
 
-    public buffer: Buffer = new Buffer('');
+    public buffer: Buffer = Buffer.from('');
 
     constructor(options?: WritableOptions) {
         super(options);

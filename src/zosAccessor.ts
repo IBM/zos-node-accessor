@@ -344,7 +344,7 @@ class ZosAccessor {
 
         // Allocate a seq dataSet
         // Upload a space here, because an empty Buffer may cause the "connection reset" error.
-        return this.uploadDataset(new Buffer(' '), datasetName, undefined, allocateParamString);
+        return this.uploadDataset(Buffer.from(' '), datasetName, undefined, allocateParamString);
     }
 
     private async upload( input: Input, destDataset: string, transferMode: TransferMode = TransferMode.ASCII,
@@ -1157,7 +1157,7 @@ class ZosAccessor {
                 if (err1) {
                     return deferred.reject(err1);
                 }
-                ftpClient.put(new Buffer(jclText), 'PLACEHOL', (err2: Error, text: string) => {
+                ftpClient.put(Buffer.from(jclText), 'PLACEHOL', (err2: Error, text: string) => {
                     if (err2) {
                         deferred.reject(err2);
                     } else {

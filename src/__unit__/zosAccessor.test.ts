@@ -235,7 +235,7 @@ describe('z/OS node accessor', () => {
     it('can get job log', async () => {
         const bufferStream = new stream.PassThrough();
         const s = 'MINUTES EXECUTION TIME\n!! END OF JES SPOOL FILE !!AAA\n!! END OF JES SPOOL FILE !!';
-        bufferStream.end(new Buffer(s));
+        bufferStream.end(Buffer.from(s));
         mockFtp4.list = jest.fn().mockImplementation((arg1, callback) => {
             callback(null, jobStatusResp.split('\n'));
         });
@@ -337,7 +337,7 @@ describe('z/OS node accessor', () => {
             '-         0.17 MINUTES EXECUTION TIME',
         ];
         const bufferStream = new stream.PassThrough();
-        bufferStream.end(new Buffer(rawJCLMSGLG.join('\n')));
+        bufferStream.end(Buffer.from(rawJCLMSGLG.join('\n')));
         mockFtp4.get = jest.fn().mockImplementation((arg1, callback) => {
             callback(null, bufferStream);
         });
@@ -373,7 +373,7 @@ describe('z/OS node accessor', () => {
             '-         0.13 MINUTES EXECUTION TIME',
         ];
         const bufferStream = new stream.PassThrough();
-        bufferStream.end(new Buffer(rawJCLMSGLG.join('\n')));
+        bufferStream.end(Buffer.from(rawJCLMSGLG.join('\n')));
         mockFtp4.get = jest.fn().mockImplementation((arg1, callback) => {
             callback(null, bufferStream);
         });
@@ -399,7 +399,7 @@ describe('z/OS node accessor', () => {
             '0         0.00 MINUTES EXECUTION TIME',
         ];
         const bufferStream = new stream.PassThrough();
-        bufferStream.end(new Buffer(rawJCLMSGLG.join('\n')));
+        bufferStream.end(Buffer.from(rawJCLMSGLG.join('\n')));
         mockFtp4.get = jest.fn().mockImplementation((arg1, callback) => {
             callback(null, bufferStream);
         });
@@ -410,7 +410,7 @@ describe('z/OS node accessor', () => {
 
     it('can change max buffer size for downloading', async () => {
         let bufferStream = new stream.PassThrough();
-        bufferStream.end(new Buffer('1234567890'));
+        bufferStream.end(Buffer.from('1234567890'));
         mockFtp4.get = jest.fn().mockImplementation((arg1, callback) => {
             callback(null, bufferStream);
         });
@@ -427,7 +427,7 @@ describe('z/OS node accessor', () => {
 
         // Come back to large buffer size
         bufferStream = new stream.PassThrough();
-        bufferStream.end(new Buffer('1234567890'));
+        bufferStream.end(Buffer.from('1234567890'));
         mockFtp4.get = jest.fn().mockImplementation((arg1, callback) => {
             callback(null, bufferStream);
         });
