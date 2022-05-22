@@ -95,12 +95,12 @@ c.connect({user: 'myname', password:'mypassword'})
 
 #### Allocate
 
-`allocateDataset(datasetName, allocateParams)` - Allocate sequential or partition (with the DCB attribut "PDSTYPE=PDS") dataset.
+`allocateDataset(datasetName, allocateParams)` - Allocate sequential or partition (with the DCB attribute "PDSTYPE=PDS") dataset.
 
 ##### Parameter
 
 * datasetName - _string_ -  Dataset name to allocate.
-* allocateParams - _object | string_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}. These attributes are transferred as FTP site sub commands. The tested attributes includes BLKsize/BLOCKSIze, BLocks, CYlinders, Directory, LRecl, PDSTYPE, PRImary, RECfm, SECondary, and TRacks.
+* allocateParams - _object | string_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}. These attributes are transferred as FTP `site` sub commands. The tested attributes includes BLKsize/BLOCKSIze, BLocks, CYlinders, Directory, LRecl, PDSTYPE, PRImary, RECfm, SECondary, and TRacks.
 
 Note: `DSORG=PO` was defined by zos-node-accessor, not `site` sub command. It's deprecated by `site` sub command, `PDSTYPE=PDS` or `PDSTYPE=PDSE`.
 
@@ -108,9 +108,8 @@ The `site` sub commands can be found at https://www.ibm.com/docs/en/zos/2.3.0?to
 
 Option Key | Description
 ---- | ---
-BLKsize=size	|	blocksize
+BLKsize/BLOCKSIze=size	|	block size
 BLocks | space allocations in blocks
-BLOCKSIze=size	|	blocksize
 CYlinders | space allocations in cylinders
 DATAClass=data_class	|	data class
 DCBDSN=data_set_name	|	the data set to be used as a model for allocation of new data sets
@@ -148,7 +147,7 @@ connection.allocateDataset('ABC.DEF', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 32
 ```
 
 ```js
-connection.allocateDataset('ABC.PDS', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320, 'DSORG': 'PO', 'DIRECTORY': 20})
+connection.allocateDataset('ABC.PDS', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320, 'PDSTYPE': 'PDS', 'DIRECTORY': 20})
   .then(function() {
     console.log('Success');
   })
