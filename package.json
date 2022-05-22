@@ -1,6 +1,6 @@
 {
   "name": "zos-node-accessor",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Accessing z/OS dataset and interacting with JES in NodeJS way",
   "main": "./lib/zosAccessor",
   "scripts": {
@@ -12,11 +12,12 @@
     "url": "https://github.com/IBM/zos-node-accessor"
   },
   "keywords": [
-    "zos",
-    "z/OS",
-    "jes",
     "dataset",
-    "jcl"
+    "ftp",
+    "jcl",
+    "jes",
+    "z/OS",
+    "zos"
   ],
   "dependencies": {
     "debug": "~2.6.8",
@@ -24,6 +25,7 @@
     "q": "~1.4.1"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.24",
     "jest": "^26.6.3",
     "sinon": "~1.17.7"
   },
