@@ -124,7 +124,7 @@ await accessor.connect({
 
 #### Allocate Dataset
 
-`allocateDataset(datasetName: string, allocateParamsOrString?: string | AllocateParams)` - Allocate sequential or partition (with the DCB attribut "DSORG=PO") dataset.
+`allocateDataset(datasetName: string, allocateParamsOrString?: string | AllocateParams)` - Allocate sequential or partition (with the DCB attribut "PDSTYPE=PDS") dataset.
 
 ##### Parameter
 
@@ -170,7 +170,7 @@ await connection.allocateDataset('HLQ.ABC.DEF', 'LRECL=80 RECFM=FB BLKSIZE=320')
 ```
 
 ```js
-await connection.allocateDataset('HLQ.ABC.PDS', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320, 'DSORG': 'PO', 'DIRECTORY': 20});
+await connection.allocateDataset('HLQ.ABC.PDS', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320, 'PDSTYPE': 'PDS', 'DIRECTORY': 20});
 ```
 #### List Datasets
 
