@@ -88,4 +88,16 @@ describe('The method of allocateDataset()', () => {
         expect(entry.recordLength).toBe(80);
         expect(entry.blockSize).toBe(800);
     });
+
+    it('can allocate PDS dataset \'PDSTYPE=PDS LRECL=80 RECFM=FB BLKsize=800\'', async () => {
+        await accessor.allocateDataset(dsn, 'PDSTYPE=PDS DIRECTORY=20 LRECL=80 RECFM=FB BLKsize=800');
+        const entries = await accessor.listDatasets(dsn);
+        expect(entries.length).toBe(1);
+        const entry: DatasetEntry = entries[0] as DatasetEntry;
+        expect(entry.name).toBe(Utils.removeQuote(dsn));
+        expect(entry.dsOrg).toBe('PO');
+        expect(entry.recordFormat).toBe('FB');
+        expect(entry.recordLength).toBe(80);
+        expect(entry.blockSize).toBe(800);
+    });
 });

@@ -299,10 +299,11 @@ class ZosAccessor {
     }
 
     /**
-     * Allocates the sequential or partition (with the DCB attribut "DSORG=PO") dataset. The tested attributes includes:
+     * Allocates the sequential or partition (with the DCB attribut "PDSTYPE=PDS") dataset.
+     * These attributes are transferred as FTP site sub commands. The tested attributes includes:
      *
      * ```
-     * BLKsize/BLOCKSize, Directory, DSORG, LRecl, PDSTYPE, PRImary, RECfm, SECondary, and TRacks.
+     * BLKsize/BLOCKSIze, BLocks, CYlinders, Directory, LRecl, PDSTYPE, PRImary, RECfm, SECondary, and TRacks
      * ```
      *
      * @param datasetName - Name of the dataset to allocate
@@ -324,7 +325,11 @@ class ZosAccessor {
         } else {
             allocateParamString = this.allocateParamsToString(allocateParamsOrString);
         }
-        if (allocateParamString.indexOf('DSORG=PO') !== -1) {
+        if (allocateParamString.indexOf('DSORG=PO') !== -1 ||
+            allocateParamString.indexOf('PDSTYPE=PDS') !== -1 ||
+            allocateParamString.indexOf('PDSTYPE=PDSE') !== -1) {
+            // Remove DSORG since it's not valid site sub command.
+            allocateParamString = allocateParamString.replace('DSORG=PO', '');
             // Allocate an PDS dataSet
             const deferred = Q.defer<void>();
             ftpClient.site(allocateParamString, (err: Error) => {
@@ -392,9 +397,10 @@ class ZosAccessor {
 
     /**
      * Uploads data to the specified dataset on z/OS. The tested attributes for `allocateParamsOrString` includes:
+     * These attributes are transferred as FTP site sub commands. The tested attributes includes:
      *
      * ```
-     * BLKsize/BLOCKSize, Directory, DSORG, LRecl, PDSTYPE, PRImary, RECfm, SECondary, and TRacks.
+     * BLKsize/BLOCKSIze, BLocks, CYlinders, Directory, LRecl, PDSTYPE, PRImary, RECfm, SECondary, and TRacks
      * ```
      *
      * @param input - Input, which can be a ReadableStream, a Buffer, or a path to a local file.

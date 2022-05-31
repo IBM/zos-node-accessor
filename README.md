@@ -124,36 +124,40 @@ await accessor.connect({
 
 #### Allocate Dataset
 
-`allocateDataset(datasetName: string, allocateParamsOrString?: string | AllocateParams)` - Allocate sequential or partition (with the DCB attribut "DSORG=PO") dataset.
+`allocateDataset(datasetName: string, allocateParamsOrString?: string | AllocateParams)` - Allocate sequential or partition (with the DCB attribut "PDSTYPE=PDS") dataset.
 
 ##### Parameter
 
 * datasetName - _string_ -  Dataset name to allocate.
-* allocateParams - _string | AllocateParams_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}. The tested attributes includes BLKsize/BLOCKSize, Directory, DSORG, LRecl, PDSTYPE, PRImary, RECfm, SECondary, and TRacks.
+* allocateParams - _string | AllocateParams_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}. These attributes are transferred as FTP `site` sub commands. The tested attributes includes BLKsize/BLOCKSIze, BLocks, CYlinders, Directory, LRecl, PDSTYPE, PRImary, RECfm, SECondary, and TRacks.
 
-Here is the complete list that z/OS FTP supports. Part of them are verified.
+Note: `DSORG=PO` was defined by zos-node-accessor, not `site` sub command. It's deprecated by `site` sub command, `PDSTYPE=PDS` or `PDSTYPE=PDSE`.
+
+The `site` sub commands can be found at https://www.ibm.com/docs/en/zos/2.3.0?topic=subcommands-site-subcommandsend-site-specific-information-host.
 
 Option Key | Description
 ---- | ---
-SPACETYPE	|	allocation units
-BLKSIZE	|	blocksize
-DATACLASS	|	data class
-DIRECTORY	|	directory blocks
-DSNTYPE	|	data set name type
-EATTR	|	extended attributes
-LRECL	|	logical record length
-MGMTCLASS	|	management class
-DCBDSN	|	model DCB values
-PDSTYPE	|	PDS type
-PRIMARY	|	primary space
-RECFM	|	record format
-RETPD	|	retention period
-SECONDARY	|	secondary space
-STORCLASS	|	storage class
-UNITNAME	|	unit
-VCOUNT	|	volume count
-UCOUNT	|	unit count
-VOLUME	|	volume serial number
+BLKsize/BLOCKSIze=size	|	block size
+BLocks | space allocations in blocks
+CYlinders | space allocations in cylinders
+DATAClass=data_class	|	data class
+DCBDSN=data_set_name	|	the data set to be used as a model for allocation of new data sets
+Directory=size	|	directory blocks
+DSNTYPE=SYSTEM or BASIC or LARGE	|	data set name type
+EATTR=SYSTEM or NO or OPT	|	extended attributes
+LRecl=length	|	logical record length
+MGmtclass=mgmtclass	|	management class
+PDSTYPE=PDS or PDSE	|	PDS type
+PRImary=amount	|	primary space
+RECfm=format	|	record format
+RETpd=days	|	retention period
+SECondary=amount	|	secondary space
+STOrclass=storage_class	|	storage class
+TRacks | space allocations in tracks
+UCOUN=unit_count	or P|	how many devices to allocate concurrently for this allocation request
+Unit=unit_type	|	unit type for allocation of new data sets
+VCOUNT=volume_count	|	number of tape data set volumes that an allocated data set can span
+VOLume=volume_serial or (volume_serial_list)	|	volume serial number
 
 ##### Return
 
@@ -166,7 +170,7 @@ await connection.allocateDataset('HLQ.ABC.DEF', 'LRECL=80 RECFM=FB BLKSIZE=320')
 ```
 
 ```js
-await connection.allocateDataset('HLQ.ABC.PDS', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320, 'DSORG': 'PO', 'DIRECTORY': 20});
+await connection.allocateDataset('HLQ.ABC.PDS', {'LRECL': 80, 'RECFM': 'FB', 'BLKSIZE': 320, 'PDSTYPE': 'PDS', 'DIRECTORY': 20});
 ```
 #### List Datasets
 
