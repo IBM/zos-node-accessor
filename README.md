@@ -234,7 +234,7 @@ connection.listDataset('/u/user1/')
 * destDataset - _string_ -  Dataset name to used to store the uploaded file, if it starts with `/` this file will be uploaded to USS.
 * dataType - _string (default: ascii)_ -  Transfer data type, it should be 'ascii' or 'binary', **when transfering 'ascii' files, the end-of-line sequence of input should always be `\r\n`**, otherwise the transfered file will get truncated.
 * allocateParams - _object | string_ -  A string of space separated DCB attributes or an object of DCB attribute key-value pairs, eg. "LRECL=80 RECFM=VB" or {"LRECL": 80, "RECFM": "VB"}. The tested attributes: BLKsize/BLOCKSize, LRecl, RECfm, PRImary, SECondary, TRacks.
-Extra parameters need to add siteParams can also be specified there , for example, 'sbd=(IBM-1047,ISO8859-1)' for encoding setting.
+Extra site parameters can also be specified there, for example, 'sbd=(IBM-1047,ISO8859-1)' for encoding setting.
 
 ##### Return
 
@@ -277,7 +277,7 @@ connection.uploadDataset(input, 'HLQ.HOSTS', "LRECL=80 RECFM=FB")
 can be used to download variable-length dataset like V, VB, VBS, etc. The 4-byte RDW (Record Descriptor Word) is inserted at the beginning
 of each record.
 * stream - _boolean (default: false)_ -  `true` if you want to obtain a [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams) of the data set content, or `false` to read a full dataset into memory (in Buffer).
-* params - _string_ - Add extra parameters to siteParams, for example, 'sbd=(IBM-1047,ISO8859-1)' for encoding setting.
+* params - _string_ - Add extra site parameters, for example, 'sbd=(IBM-1047,ISO8859-1)' for encoding setting.
 
 ##### Return
 
