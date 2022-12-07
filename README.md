@@ -508,7 +508,7 @@ A promise that resolves the submitted job id.
 ```ts
 import * as fs from 'fs';
 
-const jcl = fs.readFileSync('./unpaxz.jcl');
+const jcl = fs.readFileSync('./unpaxz.jcl', 'utf8');
 const jobId = await connection.submitJCL(jcl);
 ```
 
