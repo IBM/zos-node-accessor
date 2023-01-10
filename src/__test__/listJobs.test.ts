@@ -110,4 +110,26 @@ describe('The method of listJobs()', () => {
         const list = await accessor.listJobs(queryOption);
         expect(list.length).toBe(0);
     });
+
+    it('list job with invalid job name', async () => {
+        const queryOption: JobListOption = {
+            jobName: 'WRONG1234',
+        };
+        try{
+        const list = await accessor.listJobs(queryOption);
+        } catch (err) {
+            expect(err.message).toBe("Value of prefix or owner is not valid. It is longer than 8 characters.");
+        }
+    });
+
+    it('list job with invalid owner', async () => {
+        const queryOption: JobListOption = {
+            owner: 'WRONG1234',
+        };
+        try{
+        const list = await accessor.listJobs(queryOption);
+    } catch (err) {
+        expect(err.message).toBe("Value of prefix or owner is not valid. It is longer than 8 characters.");
+    }
+    });
 });

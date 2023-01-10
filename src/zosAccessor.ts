@@ -744,6 +744,7 @@ class ZosAccessor {
             // Default queryOption is job name for compatibility.
             option = { jobName: '*', owner: this.username, status: 'ALL' };
         } else {
+            this.checkJobNameAndOwner(queryOption.jobName as string, queryOption.owner as string);
             option.jobName = queryOption.jobName || '*';
             option.jobId = queryOption.jobId;
             option.owner = queryOption.owner || this.username;
@@ -1205,6 +1206,20 @@ class ZosAccessor {
             }
         }
         return params.join(' ');
+    }
+
+    /**
+     * Check the length of jobname and job owner. If it longer than 8 characters throw an error.
+     *
+     * @param jobname the jobname or prefix
+     * @param owner the owner of job
+     */
+    private checkJobNameAndOwner(jobname: string, owner: string) {
+      if ((jobname && jobname.length > 8) || (owner && owner.length) > 8) {
+        throw new Error(
+          "Value of prefix or owner is not valid. It is longer than 8 characters."
+        );
+      }
     }
 }
 
