@@ -834,6 +834,9 @@ class ZosAccessor {
                                     } else {
                                         deferred.resolve(JobStatusResult.FAIL);
                                     }
+                                })
+                                .catch(err => {
+                                    deferred.reject(err);
                                 });
                             return deferred.promise;
                         }
@@ -867,12 +870,12 @@ class ZosAccessor {
                     const posn3 = line.indexOf(EYE_CATCHER_3);
                     if (posn1 !== -1) {
                         rc = parseInt(line.substring(posn1 + EYE_CATCHER_1.length).trim(), 10);
-                        } else if (posn2 !== -1) {
+                    } else if (posn2 !== -1) {
                         rc = 'ABEND ' + line.substring(posn2 + EYE_CATCHER_2.length).trim();
-                        } else if (posn3 !== -1) {
+                    } else if (posn3 !== -1) {
                         rc = 'SEC ERROR';
-                        }
-                    });
+                    }
+                });
             }
             if (typeof(rc) === 'number') {
                 rc = parseInt(rc, 10);
@@ -1023,28 +1026,33 @@ class ZosAccessor {
                     if (jobStatus.status === 'OUTPUT' && (jobStatus.rc === undefined)) {
                         const spoolFiles = jobStatus.spoolFiles as SpoolFile[];
                         if (spoolFiles !== undefined) {
-                        // Read RC from JESMSGLG
-                        const file = spoolFiles.find((spoolFile: SpoolFile) => {
-                            return spoolFile.ddName === 'JESMSGLG';
-                        });
-                        if (file) {
-                            const optionForJESMSGLG: JobLogOption = {
-                                fileId: file.id,
-                                jobId: option.jobId,
-                                owner: option.owner,
-                        };
-                            this.getRCFromJESMSGLG(optionForJESMSGLG).then((rc: number | string) => {
-                                jobStatus.rc = rc;
-                                if (typeof(rc) === 'number' && isNaN(rc) === false) {
-                                   jobStatus.retcode = 'RC ' + (Array(4).join('0') + rc).slice(-4);
-                                } else {
-                                   jobStatus.retcode = rc.toString();
-                                }
+                            // Read RC from JESMSGLG
+                            const file = spoolFiles.find((spoolFile: SpoolFile) => {
+                                return spoolFile.ddName === 'JESMSGLG';
+                            });
+                            if (file) {
+                                const optionForJESMSGLG: JobLogOption = {
+                                    fileId: file.id,
+                                    jobId: option.jobId,
+                                    owner: option.owner,
+                                };
+                                this.getRCFromJESMSGLG(optionForJESMSGLG)
+                                    .then((rc: number | string) => {
+                                        jobStatus.rc = rc;
+                                        if (typeof(rc) === 'number' && isNaN(rc) === false) {
+                                        jobStatus.retcode = 'RC ' + (Array(4).join('0') + rc).slice(-4);
+                                        } else {
+                                        jobStatus.retcode = rc.toString();
+                                        }
+                                        deferred.resolve(jobStatus);
+                                    })
+                                    .catch(err => {
+                                        deferred.reject(err);
+                                    });
+                            } else {
                                 deferred.resolve(jobStatus);
-                                });
-                        } else {
-                            deferred.resolve(jobStatus);
-                        }}
+                            }
+                        }
                     } else {
                         deferred.resolve(jobStatus);
                     }
