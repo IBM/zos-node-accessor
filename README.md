@@ -256,13 +256,14 @@ await connection.uploadDataset(input, 'HLQ.HOSTS', "LRECL=80 RECFM=FB");
 
 #### Download MVS dataset
 
-`downloadDataset(dsn: string, transferMode: TransferMode = TransferMode.ASCII, stream = false)` - Downloads the specified dataset or member of patition dataset.
+`downloadDataset(dsn: string, transferMode: TransferMode = TransferMode.ASCII, stream = false, siteParams?: string)` - Downloads the specified dataset or member of patition dataset.
 
 ##### Parameter
 
 * dsn - _string_ -  Specify a full qualified dataset name, or USS file name. It **CAN NOT** contain any wildcard (*).
 * transferMode - _TransferMode_ -  `TransferMode.ASCII`, `TransferMode.BINARY`, `TransferMode.ASCII_STRIP_EOL`, `TransferMode.ASCII_RDW`, or `TransferMode.BINARY_RDW`. When downloading a text dataset, transferMode should be either `TransferMode.ASCII` or `TransferMode.ASCII_STRIP_EOL` so that z/OS FTP service converts `EBCDIC` characters to  `ASCII`. `TransferMode.ASCII_STRIP_EOL` asks z/OS FTP service not to append a `CLRF` to the end of each record. `TransferMode.ASCII_RDW` and `TransferMode.BINARY_RDW` support to download variable length dataset, which add 4-byte Record Description Word (RDW) at the beginning of each record.
 * stream - _boolean_ -  `true` if you want to obtain a [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams) of the data set content, or `false` to read a full dataset into memory (in Buffer). The buffer accepts up to 4MB data. For large dataset, use `stream=true` instead.
+* siteParams - _string_ - Add extra site parameters, for example, 'sbd=(IBM-1047,ISO8859-1)' for encoding setting.
 
 ##### Return
 

@@ -1,6 +1,6 @@
 {
   "name": "zos-node-accessor",
-  "version": "2.0.5",
+  "version": "2.0.7",
   "description": "Accessing z/OS dataset and interacting with JES in NodeJS way",
   "main": "./lib/zosAccessor.js",
   "types": "./lib/zosAccessor.d.ts",

@@ -1,6 +1,6 @@
 /****************************************************************************/
 /*                                                                          */
-/* Copyright (c) 2017, 2021 IBM Corp.                                       */
+/* Copyright (c) 2017, 2023 IBM Corp.                                       */
 /* All rights reserved. This program and the accompanying materials         */
 /* are made available under the terms of the Eclipse Public License v1.0    */
 /* which accompanies this distribution, and is available at                 */
@@ -429,7 +429,7 @@ class ZosAccessor {
     }
 
     private async download(dsn: string, transferMode: TransferMode = TransferMode.ASCII,
-                           stream = false): Promise<Buffer | ReadStream> {
+                           stream = false, siteParams?: string): Promise<Buffer | ReadStream> {
         const deferred = Q.defer<Buffer | ReadStream>();
         const ftpClient = this.client;
 
@@ -445,12 +445,17 @@ class ZosAccessor {
             transferMode = TransferMode.ASCII;
         }
 
+        let site = 'FILETYPE=SEQ TRAILINGBLANKS ' + sbsendeol;
+        if (siteParams) {
+            site += ' ' + siteParams;
+        }
+
         // ftpClient.ascii() or ftpClient.binary()
         ftpClient[transferMode]((err: Error) => {
             if (err) {
                 return deferred.reject(err);
             }
-            ftpClient.site('FILETYPE=SEQ TRAILINGBLANKS ' + sbsendeol, (err1: Error) => {
+            ftpClient.site(site, (err1: Error) => {
                 if (err1) {
                     return deferred.reject(err1);
                 }
@@ -500,10 +505,12 @@ class ZosAccessor {
      * @param {boolean} stream - `true` if you want to obtain a `ReadStream` of the data set content, or `false`
      *                           to read a full dataset into memory (in Buffer). The buffer accepts up to 4MB data.
      *                           For large dataset, use `stream=true` instead.
+     * @param {string} siteParams - Add extra site parameters, for example, 'sbd=(IBM-1047,ISO8859-1)' for encoding
+     *                              setting.
      * @returns `ReadStream` or `Buffer`
      */
     public async downloadDataset(dsn: string, transferMode: TransferMode = TransferMode.ASCII,
-                                 stream = false): Promise<Buffer | ReadStream> {
+                                 stream = false, siteParams?: string): Promise<Buffer | ReadStream> {
         if (transferMode === TransferMode.ASCII_RDW || transferMode === TransferMode.BINARY_RDW) {
             if (transferMode === TransferMode.ASCII_RDW) {
                 transferMode = TransferMode.ASCII;
@@ -516,12 +523,12 @@ class ZosAccessor {
                 if (err) {
                     return deferred.reject(err);
                 }
-                const file = await this.download(dsn, transferMode, stream);
+                const file = await this.download(dsn, transferMode, stream, siteParams);
                 deferred.resolve(file);
             });
             return deferred.promise;
         }
-        return await this.download(dsn, transferMode, stream);
+        return await this.download(dsn, transferMode, stream, siteParams);
     }
 
     /**
@@ -1215,7 +1222,7 @@ class ZosAccessor {
      * @param owner the owner of job
      */
     private checkJobNameAndOwner(jobname: string, owner: string) {
-      if ((jobname && jobname.length > 8) || (owner && owner.length) > 8) {
+      if ((jobname && jobname.length > 8) || (owner && owner.length > 8)) {
         throw new Error(
           "Value of prefix or owner is not valid. It is longer than 8 characters."
         );
