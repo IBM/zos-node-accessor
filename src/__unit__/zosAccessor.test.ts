@@ -441,6 +441,11 @@ describe('z/OS node accessor', () => {
         expect(mockFtp4.site).toBeCalledWith('rdw', expect.any(Function));
     });
 
+    it('can download dataset with site params', async () => {
+        await client.downloadDataset('dsn', TransferMode.BINARY, true, 'site params');
+        expect(mockFtp4.site).toBeCalledWith('FILETYPE=SEQ TRAILINGBLANKS SBSENDEOL=CRLF site params', expect.any(Function));
+    });
+
     it('can convert allocation parameter object to string', async () => {
         await client.uploadDataset('hello', uploadDSN, TransferMode.ASCII, { LRECL: 80, RECFM: 'FB'});
         expect(mockFtp4.site).toBeCalledWith('FILETYPE=SEQ LRECL=80 RECFM=FB', expect.any(Function));
