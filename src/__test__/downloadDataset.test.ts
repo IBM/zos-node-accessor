@@ -82,6 +82,14 @@ describe('The method of downloadDataset()', () => {
         expect(contents2.toString().trim()).toBe('helloworld');
     });
 
+    it('can get text contents from dataset with TransferMode.ASCII_NO_TRAILING_BLANKS', async () => {
+        await accessor.uploadDataset('hello\r\nworld       ', dsn);
+        const contents1 = await accessor.downloadDataset(dsn, TransferMode.ASCII);
+        expect(contents1.toString().trim()).toBe('hello\r\nworld');
+        const contents2 = await accessor.downloadDataset(dsn, TransferMode.ASCII_NO_TRAILING_BLANKS);
+        expect(contents2.toString().trim()).toBe('helloworld');
+    });
+
     it('can get text contents from dataset with TransferMode.BINARY', async () => {
         await accessor.uploadDataset('hello\r\nworld', dsn);
         const contents2 = await accessor.downloadDataset(dsn, TransferMode.BINARY);
