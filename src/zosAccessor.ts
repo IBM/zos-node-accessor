@@ -445,11 +445,11 @@ class ZosAccessor {
             transferMode !== TransferMode.BINARY) {
             throw new Error('Unsupported data type: ' + transferMode);
         }
-        let ftpCommand = ftpClient.binary;
+        let ftpCommand = ftpClient.binary.bind(ftpClient);
         if (transferMode === TransferMode.ASCII ||
             transferMode === TransferMode.ASCII_NO_TRAILING_BLANKS ||
             transferMode === TransferMode.ASCII_STRIP_EOL) {
-            ftpCommand = ftpClient.ascii;
+            ftpCommand = ftpClient.ascii.bind(ftpClient);
         }
         let sbsendeol = 'SBSENDEOL=CRLF';
         if (transferMode === TransferMode.ASCII_STRIP_EOL) {

@@ -52,10 +52,18 @@ describe('The method of downloadDataset()', () => {
         }
     });
 
+    async function reconnectFTPServer() {
+        if (accessor) {
+            await accessor.close();
+        }
+        accessor = await connectFTPServer();
+    }
+
     it('can get text contents from dataset with the default TransferMode.ASCII', async () => {
         await accessor.uploadDataset('hello\nworld', dsn);
         const contents1 = await accessor.downloadDataset(dsn, TransferMode.ASCII);
         expect(contents1.toString().trim()).toBe('hello\nworld');
+        await reconnectFTPServer()
         const contents2 = await accessor.downloadDataset(dsn, TransferMode.ASCII);
         expect(contents2.toString().trim()).toBe('hello\nworld');
     });
@@ -78,16 +86,18 @@ describe('The method of downloadDataset()', () => {
         await accessor.uploadDataset('hello\r\nworld', dsn);
         const contents1 = await accessor.downloadDataset(dsn, TransferMode.ASCII);
         expect(contents1.toString().trim()).toBe('hello\r\nworld');
+        await reconnectFTPServer()
         const contents2 = await accessor.downloadDataset(dsn, TransferMode.ASCII_STRIP_EOL);
         expect(contents2.toString().trim()).toBe('helloworld');
     });
 
     it('can get text contents from dataset with TransferMode.ASCII_NO_TRAILING_BLANKS', async () => {
-        await accessor.uploadDataset('hello\r\nworld       ', dsn);
+        await accessor.uploadDataset('hello       ', dsn, TransferMode.ASCII, { RECfm: 'FB', LRECL: 80 });
         const contents1 = await accessor.downloadDataset(dsn, TransferMode.ASCII);
-        expect(contents1.toString().trim()).toBe('hello\r\nworld');
+        expect(contents1.toString()).toBe('hello                                                                           \r\n');
+        await reconnectFTPServer()
         const contents2 = await accessor.downloadDataset(dsn, TransferMode.ASCII_NO_TRAILING_BLANKS);
-        expect(contents2.toString().trim()).toBe('helloworld');
+        expect(contents2.toString()).toBe('hello\r\n');
     });
 
     it('can get text contents from dataset with TransferMode.BINARY', async () => {
