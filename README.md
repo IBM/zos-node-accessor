@@ -400,7 +400,7 @@ await connection.uploadFile(input, '/u/username/hosts');
 ##### Parameter
 
 * filePath - _string_ -  USS file path name.
-* transferMode - _TransferMode_ -  `TransferMode.ASCII`, `TransferMode.BINARY`. When downloading a text dataset, transferMode should be either `TransferMode.ASCII` so that z/OS FTP service converts `EBCDIC` characters to  `ASCII`.
+* transferMode - _TransferMode_ -  `TransferMode.ASCII`, `TransferMode.BINARY` and `TransferMode.ASCII_NO_TRAILING_BLANKS`. The `TransferMode.ASCII` and `TransferMode.ASCII_NO_TRAILING_BLANKS` asks z/OS FTP service to convert `EBCDIC` characters to  `ASCII`. The `TransferMode.ASCII_NO_TRAILING_BLANKS` asks z/OS FTP service to remove trailing blanks.
 * stream - _boolean_ -  `true` if you want to obtain a [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams) of the file content, or `false` to read a full file into memory (in Buffer). The buffer accepts up to 4MB data. For large file, use `stream=true` instead.
 
 ##### Return

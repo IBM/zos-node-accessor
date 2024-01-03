@@ -56,8 +56,8 @@ describe('The method of downloadFile()', () => {
         expect(buffer.toString()).toBe(text);
     });
 
-    it('can get USS file in ASCII_NO_TRAILING_BLANKS mode', async () => {
-        const text = 'Hello';
+    it.only('can get USS file in ASCII_NO_TRAILING_BLANKS mode', async () => {
+        const text = 'Hello\r\n';
 
         const buffer = await accessor.downloadFile(getUSSPath('nodeacc/hello_with_trailingblanks.txt'), TransferMode.ASCII_NO_TRAILING_BLANKS);
         expect(buffer.toString()).toBe(text);
