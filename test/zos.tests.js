@@ -321,6 +321,18 @@ describe('Integration test cases for z/OS node accessor', function() {
             });
     });
 
+    it('can get USS file in ascii_no_trailing_blanks mode', function(done) {
+        var text = 'Hello\r\n';
+
+        _client.getDataset(getUSSPath('nodeacc/hello.txt'),'ascii_no_trailing_blanks')
+            .then(function(buffer) {
+                expect(buffer.toString()).toBe(text);
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+    });
+
     it('can get USS file in ASCII mode as STREAM', function(done) {
         var text = 'Hello\r\n';
 
