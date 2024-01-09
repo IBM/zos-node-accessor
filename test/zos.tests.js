@@ -174,7 +174,7 @@ describe('Integration test cases for z/OS node accessor', function() {
     });    
 
     // The dataset "<USERNAME>.NODEACC.HELLO" is required on MVS.
-    it('can get MVS dataset in ASCII mode', function(done) {
+    it('can get MVS dataset in ascii mode', function(done) {
         var text = 'HELLO                                                                   00000100\r\n';
 
         _client.getDataset(getDSN('NODEACC.HELLO'), 'ascii')
@@ -186,12 +186,65 @@ describe('Integration test cases for z/OS node accessor', function() {
             });
     });
 
-    it('can get MVS dataset in ASCII_STRIP_EOL mode', function(done) {
+    // The dataset "<USERNAME>.NODEACC.HELLO" is required on MVS.
+    it('can get MVS dataset in ascii_strip_eol mode', function(done) {
         var text = 'HELLO                                                                   00000100';
 
         _client.getDataset(getDSN('NODEACC.HELLO'), 'ascii_strip_eol')
             .then(function(buffer) {
                 expect(buffer.toString()).toBe(text);
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+    });
+
+    // The dataset "<USERNAME>.NODEACC.HELLO2" with the contents of "HELLO" is required on MVS.
+    it('can get MVS dataset in ascii_no_trailing_blanks mode', function(done) {
+        var text = 'HELLO\r\n';
+
+        _client.getDataset(getDSN('NODEACC.HELLO2'), 'ascii_no_trailing_blanks')
+            .then(function(buffer) {
+                expect(buffer.toString()).toBe(text);
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+    });
+
+    // The dataset "<USERNAME>.NODEACC.HELLO2" with the contents of "HELLO" is required on MVS.
+    it('can get MVS dataset in ascii mode', function(done) {
+        var text = 'HELLO                                                                           \r\n';
+
+        _client.getDataset(getDSN('NODEACC.HELLO2'), 'ascii')
+            .then(function(buffer) {
+                expect(buffer.toString()).toBe(text);
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+    });
+
+    // The VB dataset "<USERNAME>.NODEACC.VBHELLO" with the contents of "HELLO" is required on MVS.
+    it('can get MVS dataset in ascii_rdw mode', function(done) {
+        var bytes = [0,11,0,0,86,66,72,69,76,76,79,13,10];
+
+        _client.getDataset(getDSN('NODEACC.VBHELLO'), 'ascii_rdw')
+            .then(function(buffer) {
+                expect(Array.from(buffer.values())).toEqual(bytes);
+                done();
+            }).catch(function(err) {
+                done(err);
+            });
+    });
+
+    // The VB dataset "<USERNAME>.NODEACC.VBHELLO" with the contents of "HELLO" is required on MVS.
+    it('can get MVS dataset in binary_rdw mode', function(done) {
+        var bytes = [0,11,0,0,229,194,200,197,211,211,214];
+
+        _client.getDataset(getDSN('NODEACC.VBHELLO'), 'binary_rdw')
+            .then(function(buffer) {
+                expect(Array.from(buffer.values())).toEqual(bytes);
                 done();
             }).catch(function(err) {
                 done(err);

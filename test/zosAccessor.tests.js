@@ -1,6 +1,6 @@
 /****************************************************************************/
 /*                                                                          */
-/* Copyright (c) 2017, 2021 IBM Corp.                                       */
+/* Copyright (c) 2017, 2023 IBM Corp.                                       */
 /* All rights reserved. This program and the accompanying materials         */
 /* are made available under the terms of the Eclipse Public License v1.0    */
 /* which accompanies this distribution, and is available at                 */
@@ -490,6 +490,19 @@ describe('Test cases for z/OS node accessor', function() {
             var stub= sinon.stub(client.client, 'get').callsArgWith(1, null, bufferStream);
             return client.getDataset(uploadDSN, 'binary_rdw', true).then(function () {
                 site_stub && expect(site_stub.calledWithMatch(/.*rdw.*/)).toBeTruthy();
+            }).finally(function () {
+                stub && stub.restore();
+                site_stub && site_stub.restore();
+            });
+        }
+    });
+
+    it('can download variable length dataset with no trailing blanks', function() {
+        if(!TEST_ZOS) {
+            var bufferStream = new stream.PassThrough();
+            var stub= sinon.stub(client.client, 'get').callsArgWith(1, null, bufferStream);
+            return client.getDataset(uploadDSN, 'ascii_no_trailing_blanks', true).then(function () {
+                site_stub && expect(site_stub.calledWithMatch(/.*TRAILINGBLANKS.*/)).toBeFalsy();
             }).finally(function () {
                 stub && stub.restore();
                 site_stub && site_stub.restore();

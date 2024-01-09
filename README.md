@@ -273,9 +273,7 @@ connection.uploadDataset(input, 'HLQ.HOSTS', "LRECL=80 RECFM=FB")
 ##### Parameter
 
 * dsn - _string_ -  Specify a full qualified dataset name, or USS file name. It **CAN NOT** contain any wildcard (*).
-* dataType - _string (default: 'ascii')_ -  Transfer data type, accepts three options `binary`,  `ascii`, `ascii_strip_eol`, `ascii_rdw` or `binary_rdw`. When downloading an ascii dataset, dataType should be either `ascii` or `ascii_strip_eol` so that the FTP server converts `EBCDIC` characters to  `ASCII`, `ascii_strip_eol` tells FTP server not the append a CLRF to the end of each record. The `ascii_rdw` or `binary_rdw`
-can be used to download variable-length dataset like V, VB, VBS, etc. The 4-byte RDW (Record Descriptor Word) is inserted at the beginning
-of each record.
+* dataType - _string (default: 'ascii')_ -  Transfer data type, accepts the options of `binary`, `ascii`, `ascii_strip_eol`, `ascii_no_trailing_blanks`, `ascii_rdw` or `binary_rdw`. The option `ascii`, or `ascii_strip_eol`, `ascii_no_trailing_blanks`, or `ascii_rdw` tells FTP server convert `EBCDIC` characters to `ASCII`. The option `ascii_strip_eol` tells FTP server not the append a CLRF to the end of each record. The option `ascii_no_trailing_blanks` tells FTP server remove the trailing blanks. The option `ascii_rdw` or `binary_rdw` can be used to download variable-length dataset like V, VB, VBS, etc. The 4-byte RDW (Record Descriptor Word) is inserted at the beginning of each record. 
 * stream - _boolean (default: false)_ -  `true` if you want to obtain a [ReadableStream](https://nodejs.org/api/stream.html#stream_readable_streams) of the data set content, or `false` to read a full dataset into memory (in Buffer).
 * params - _string_ - Add extra site parameters, for example, 'sbd=(IBM-1047,ISO8859-1)' for encoding setting.
 
@@ -669,7 +667,7 @@ This module adopts the [Module Long Term Support (LTS)](http://github.com/CloudN
 
 | Module Version   | Release Date | Minimum EOL | EOL With     | Status  |
 |------------------|--------------|-------------|--------------|---------|
-| 1.x.x	         | Oct 2018    | Dec 2019    |              | Current |
+| 1.x.x	           | Oct 2018     | Dec 2019    |              | Current |
 
 ## License
 
