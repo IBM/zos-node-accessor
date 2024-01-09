@@ -71,10 +71,15 @@ export enum TransferMode {
     ASCII = 'ascii',
 
     /**
-     * The data is transferre in text mode, in which encoding conversion like ASCII/EBCDIC will happen, and
+     * The data is transferred in text mode, in which encoding conversion like ASCII/EBCDIC will happen, and
      * the EOL of each record in dataset will be removed.
      */
     ASCII_STRIP_EOL = 'ascii_strip_eol',
+
+    /**
+     * The data is transferred in text mode, in which the trailing blanks will be removed.
+     */
+    ASCII_NO_TRAILING_BLANKS = 'ascii_no_trailing_blanks',
 
     /**
      * The data is transferred in binary mode, in which no encoding conversion will happen.
@@ -435,9 +440,16 @@ class ZosAccessor {
 
         // We still need this check in case the other TransferMode will be added in future.
         if (transferMode !== TransferMode.ASCII &&
-            transferMode !== TransferMode.BINARY &&
-            transferMode !== TransferMode.ASCII_STRIP_EOL) {
+            transferMode !== TransferMode.ASCII_NO_TRAILING_BLANKS &&
+            transferMode !== TransferMode.ASCII_STRIP_EOL &&
+            transferMode !== TransferMode.BINARY) {
             throw new Error('Unsupported data type: ' + transferMode);
+        }
+        let ftpCommand = ftpClient.binary.bind(ftpClient);
+        if (transferMode === TransferMode.ASCII ||
+            transferMode === TransferMode.ASCII_NO_TRAILING_BLANKS ||
+            transferMode === TransferMode.ASCII_STRIP_EOL) {
+            ftpCommand = ftpClient.ascii.bind(ftpClient);
         }
         let sbsendeol = 'SBSENDEOL=CRLF';
         if (transferMode === TransferMode.ASCII_STRIP_EOL) {
@@ -445,13 +457,17 @@ class ZosAccessor {
             transferMode = TransferMode.ASCII;
         }
 
-        let site = 'FILETYPE=SEQ TRAILINGBLANKS ' + sbsendeol;
+        let trailingBlanks = 'TRAILINGBLANKS';
+        if (transferMode === TransferMode.ASCII_NO_TRAILING_BLANKS) {
+            trailingBlanks = '';
+        }
+        let site = 'FILETYPE=SEQ ' + trailingBlanks + ' ' + sbsendeol;
         if (siteParams) {
             site += ' ' + siteParams;
         }
 
         // ftpClient.ascii() or ftpClient.binary()
-        ftpClient[transferMode]((err: Error) => {
+        ftpCommand((err: Error) => {
             if (err) {
                 return deferred.reject(err);
             }
@@ -495,11 +511,14 @@ class ZosAccessor {
      * Downloads the specified dataset or member of patition dataset.
      *
      * @param dsn - Dataset name
-     * @param transferMode - TransferMode.ASCII, TransferMode.BINARY, TransferMode.ASCII_RDW, TransferMode.BINARY_RDW
-     *                       or TransferMode.ASCII_STRIP_EOL. When downloading a text dataset, transferMode should be
-     *                       either `TransferMode.ASCII` or `TransferMode.ASCII_STRIP_EOL` so that z/OS FTP service
-     *                       converts `EBCDIC` characters to `ASCII`. `TransferMode.ASCII_STRIP_EOL` asks z/OS FTP
-     *                       service not to append a `CLRF` to the end of each record. `TransferMode.ASCII_RDW` and
+     * @param transferMode - TransferMode.ASCII, TransferMode.ASCII_RDW, TransferMode.ASCII_STRIP_EOL,
+     *                       TransferMode.ASCII_NO_TRAILING_BLANKS, TransferMode.BINARY, or TransferMode.BINARY_RDW. 
+     *                       The `TransferMode.ASCII`, ` TransferMode.ASCII_RDW`, `TransferMode.ASCII_STRIP_EOL`,
+     *                       or TransferMode.ASCII_NO_TRAILING_BLANKS asks z/OS FTP service to 
+     *                       convert `EBCDIC` characters to `ASCII`. `TransferMode.ASCII_STRIP_EOL` asks z/OS FTP
+     *                       service not to append a `CLRF` to the end of each record. The 
+     *                       `TransferMode.ASCII_NO_TRAILING_BLANKS` asks z/OS FTP service to remove trailing blanks.
+     *                       `TransferMode.ASCII_RDW` and
      *                       `TransferMode.BINARY_RDW` support to download variable length dataset, which add 4-byte
      *                       Record Description Word (RDW) at the beginning of each record.
      * @param {boolean} stream - `true` if you want to obtain a `ReadStream` of the data set content, or `false`
