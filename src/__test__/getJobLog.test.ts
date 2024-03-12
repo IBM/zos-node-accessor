@@ -11,8 +11,7 @@
 /*                                                                          */
 /****************************************************************************/
 
-import { JobLogOption } from '../interfaces/JobIdOption';
-import { ZosAccessor } from '../zosAccessor';
+import { ZosAccessor, JobLogOption } from '../zosAccessor';
 import { connectFTPServer, submitHelloJob } from './testUtils';
 
 describe('The method of getJobLog()', () => {

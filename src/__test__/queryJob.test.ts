@@ -11,9 +11,8 @@
 /*                                                                          */
 /****************************************************************************/
 
-import { ZosAccessor, JobStatusResult } from '../zosAccessor';
+import { ZosAccessor, JobStatusResult, JobIdOption } from '../zosAccessor';
 import { connectFTPServer, submitHelloJob } from './testUtils';
-import { JobIdOption } from '../interfaces/JobIdOption';
 
 describe('The method of queryJob()', () => {
 

@@ -11,8 +11,7 @@
 /*                                                                          */
 /****************************************************************************/
 
-import { JobIdOption } from '../interfaces/JobIdOption';
-import { ZosAccessor } from '../zosAccessor';
+import { ZosAccessor, JobIdOption } from '../zosAccessor';
 import { connectFTPServer, submitHelloJob } from './testUtils';
 
 describe('The method of submitJCL()', () => {

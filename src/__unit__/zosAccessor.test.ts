@@ -45,8 +45,7 @@ ftp4.mockImplementation(() => {
 import Q from 'q';
 import * as stream from 'stream';
 
-import { SpoolFile } from '../interfaces/SpoolFile';
-import { JobStatusResult, TransferMode, ZosAccessor } from '../zosAccessor';
+import { JobStatusResult, TransferMode, ZosAccessor, SpoolFile } from '../zosAccessor';
 import { rawDatasetList } from './testInput';
 
 const USERNAME = 'ADCDA';

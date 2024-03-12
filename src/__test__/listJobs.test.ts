@@ -11,8 +11,7 @@
 /*                                                                          */
 /****************************************************************************/
 
-import { JobListOption } from '../interfaces/JobListOption';
-import { ZosAccessor } from '../zosAccessor';
+import { ZosAccessor, JobListOption } from '../zosAccessor';
 import { connectFTPServer, submitHelloJob } from './testUtils';
 
 describe('The method of listJobs()', () => {

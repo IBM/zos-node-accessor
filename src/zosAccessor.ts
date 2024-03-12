@@ -1257,7 +1257,15 @@ class ZosAccessor {
     }
 }
 
-export {
-    ZosAccessor,
-};
+export { ZosAccessor };
 
+export { ConnectionOption } from "./interfaces/ConnectionOption";
+export { DatasetEntry } from "./interfaces/DatasetEntry";
+export { DatasetMemberEntry } from "./interfaces/DatasetMemberEntry";
+export { Entry } from "./interfaces/Entry";
+export { Job, JobStatus } from "./interfaces/Job"
+export { JobLogOption, JobIdOption } from "./interfaces/JobIdOption"
+export { JobListOption } from "./interfaces/JobListOption"
+export { LoadLibMemberEntry } from "./interfaces/LoadLibMemberEntry";
+export { SpoolFile } from "./interfaces/SpoolFile"
+export { USSEntry, FileType } from "./interfaces/USSEntry";
