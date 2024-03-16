@@ -16,9 +16,8 @@ import * as path from 'path';
 import Q from 'q';
 
 import { Writable, WritableOptions } from 'stream';
-import { JobIdOption } from '../interfaces/JobIdOption';
 import { Utils } from '../utils';
-import { FileToOperate, ZosAccessor } from '../zosAccessor';
+import { FileToOperate, ZosAccessor, JobIdOption } from '../zosAccessor';
 
 export interface JobNameAndJCL {
     jobName: string;
