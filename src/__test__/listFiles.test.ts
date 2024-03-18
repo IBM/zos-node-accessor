@@ -13,8 +13,7 @@
 
 import path from 'path';
 
-import { FileType, USSEntry } from '../interfaces/USSEntry';
-import { ZosAccessor } from '../zosAccessor';
+import { ZosAccessor, FileType, USSEntry } from '../zosAccessor';
 import {
     connectFTPServer,
     deleteDirectory,

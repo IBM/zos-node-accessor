@@ -11,7 +11,7 @@
 /*                                                                          */
 /****************************************************************************/
 
-import { USSEntry } from '../interfaces/USSEntry';
+import { USSEntry } from '../zosAccessor';
 import { parseDataSets, parseLoadLibPDSMembers, parsePDSMembers, parseUSSDirList } from '../parser';
 import { rawDatasetList, rawLoadLibMemberList, rawUSSList, rawUSSList2, rawUSSList3 } from './testInput';
 

@@ -11,9 +11,7 @@
 /*                                                                          */
 /****************************************************************************/
 
-import { JobIdOption } from '../interfaces/JobIdOption';
-import { SpoolFile } from '../interfaces/SpoolFile';
-import { ZosAccessor } from '../zosAccessor';
+import { ZosAccessor, JobIdOption, SpoolFile } from '../zosAccessor';
 import { connectFTPServer, submitHelloJob, USERNAME } from './testUtils';
 
 describe('The method of getJobStatus()', () => {

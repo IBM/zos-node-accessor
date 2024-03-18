@@ -11,10 +11,9 @@
 /*                                                                          */
 /****************************************************************************/
 
-import { ZosAccessor } from '../zosAccessor';
+import { ZosAccessor, DatasetEntry } from '../zosAccessor';
 import { connectFTPServer, getRandomDatasetName, deleteDataset } from './testUtils';
 import { Utils } from '../utils';
-import { DatasetEntry } from '../interfaces/DatasetEntry';
 
 let dsn: string;
 

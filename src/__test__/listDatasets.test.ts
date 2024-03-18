@@ -11,9 +11,7 @@
 /*                                                                          */
 /****************************************************************************/
 
-import { DatasetEntry } from '../interfaces/DatasetEntry';
-import { DatasetMemberEntry } from '../interfaces/DatasetMemberEntry';
-import { TransferMode, ZosAccessor } from '../zosAccessor';
+import { TransferMode, ZosAccessor, DatasetEntry, DatasetMemberEntry } from '../zosAccessor';
 import {
     connectFTPServer,
     deleteDataset,
