@@ -990,8 +990,9 @@ class ZosAccessor {
                     }
                     const job = parseJobLine(list[jobDescIndex + 1].trim());
                     const jobStatus: JobStatus = { ...job } as JobStatus;
-
-                    if (jobStatus.extra) {
+                    if (jobStatus.extra) {                       
+                        const findRC = (jobStatus.extra).indexOf('RC=');
+                        if(findRC !== -1) {
                         jobStatus.extra.split(/\s+/).forEach((entry: string) => {
                             const pair: string[] = entry.split('=');
                             if (pair.length === 2) {
@@ -1001,7 +1002,10 @@ class ZosAccessor {
                                 }
                             }
                         });
-                    }
+                    } else {
+                        throw Error("Job with error " + jobStatus.extra)
+                    } 
+                };
 
                     // For TSO users
                     //  No proper data to cover this so far.
