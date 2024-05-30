@@ -990,9 +990,8 @@ class ZosAccessor {
                     }
                     const job = parseJobLine(list[jobDescIndex + 1].trim());
                     const jobStatus: JobStatus = { ...job } as JobStatus;
+                    jobStatus.extra = "SYS FAIL";
                     if (jobStatus.extra) {                       
-                        const findRC = (jobStatus.extra).indexOf('RC=');
-                        if(findRC !== -1) {
                         jobStatus.extra.split(/\s+/).forEach((entry: string) => {
                             const pair: string[] = entry.split('=');
                             if (pair.length === 2) {
@@ -1002,9 +1001,6 @@ class ZosAccessor {
                                 }
                             }
                         });
-                    } else {
-                        throw Error("Job with error " + jobStatus.extra)
-                    } 
                 };
 
                     // For TSO users
@@ -1046,8 +1042,11 @@ class ZosAccessor {
                     }
 
                     // If job finished, while FTP doesn't provide RC
+                    jobStatus.status = "OUTPUT";
+                    jobStatus.rc = undefined;
                     if (jobStatus.status === 'OUTPUT' && (jobStatus.rc === undefined)) {
-                        const spoolFiles = jobStatus.spoolFiles as SpoolFile[];
+                        jobStatus.spoolFiles = undefined;
+                        const spoolFiles = jobStatus.spoolFiles as unknown as SpoolFile[];
                         if (spoolFiles !== undefined) {
                             // Read RC from JESMSGLG
                             const file = spoolFiles.find((spoolFile: SpoolFile) => {
@@ -1075,6 +1074,8 @@ class ZosAccessor {
                             } else {
                                 deferred.resolve(jobStatus);
                             }
+                        } else {
+                            deferred.resolve(jobStatus);
                         }
                     } else {
                         deferred.resolve(jobStatus);
