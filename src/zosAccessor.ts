@@ -1071,6 +1071,9 @@ class ZosAccessor {
                             } else {
                                 deferred.resolve(jobStatus);
                             }
+                        } else {
+                            jobStatus.spoolFiles = [];
+                            deferred.resolve(jobStatus);
                         }
                     } else {
                         deferred.resolve(jobStatus);
