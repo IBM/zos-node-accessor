@@ -1071,6 +1071,8 @@ class ZosAccessor {
                             } else {
                                 deferred.resolve(jobStatus);
                             }
+                        } else {
+                            deferred.resolve(jobStatus);
                         }
                     } else {
                         deferred.resolve(jobStatus);
