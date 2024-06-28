@@ -65,6 +65,7 @@
 
     /* Advanced Options */
     "resolveJsonModule": true,                /* Include modules imported with '.json' extension */
-    "forceConsistentCasingInFileNames": true  /* Disallow inconsistently-cased references to the same file. */
+    "forceConsistentCasingInFileNames": true, /* Disallow inconsistently-cased references to the same file. */
+    "useUnknownInCatchVariables": false       /* Use Unknown In Catch Variables  */
   }
 }

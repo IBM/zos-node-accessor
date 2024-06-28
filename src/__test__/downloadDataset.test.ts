@@ -108,7 +108,7 @@ describe('The method of downloadDataset()', () => {
 
     it('can download variable length dataset with TransferMode.BINARY_RDW', async () => {
         const contents2 = await accessor.downloadDataset(dsname_rdw, TransferMode.BINARY_RDW);
-        fs.writeFileSync('./file', contents2);
+        fs.writeFileSync('./file', contents2.toString());
         const stats = fs.statSync('./file')
         const fileSizeInBytes = stats.size
         expect(fileSizeInBytes).toEqual(dssize_rdw);
